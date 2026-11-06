@@ -12,7 +12,12 @@ from flask_cors import CORS
 from database import get_db_connection, init_db, hash_password
 from pincode_data import lookup_indian_pincode_city
 
-app = Flask(__name__, static_folder="static", template_folder="templates")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app = Flask(
+    __name__,
+    static_folder=os.path.join(BASE_DIR, "static"),
+    template_folder=os.path.join(BASE_DIR, "templates")
+)
 app.secret_key = "sncs_ranchi_courier_secret_key_834001"
 CORS(app)
 

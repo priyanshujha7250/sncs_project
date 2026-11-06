@@ -59,7 +59,7 @@
 ## 📁 Project Architecture
 
 ```
-Sncs_project/
+sncs_project/
 ├── app.py                      # Flask backend application with REST APIs & auth
 ├── database.py                 # SQLite database schema, initialization & seed data
 ├── sncs.db                     # Persistent SQLite database

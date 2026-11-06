@@ -1,12 +1,26 @@
 import sqlite3
 import os
+import shutil
 import hashlib
 from datetime import datetime, timedelta
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "sncs.db")
+def get_db_path():
+    if os.environ.get("VERCEL"):
+        tmp_path = "/tmp/sncs.db"
+        orig_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sncs.db")
+        if not os.path.exists(tmp_path) and os.path.exists(orig_path):
+            try:
+                shutil.copy2(orig_path, tmp_path)
+            except Exception:
+                pass
+        return tmp_path
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "sncs.db")
+
+DB_PATH = get_db_path()
 
 def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
+    db_file = get_db_path()
+    conn = sqlite3.connect(db_file)
     conn.row_factory = sqlite3.Row
     return conn
 

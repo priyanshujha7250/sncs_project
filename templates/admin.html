@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SNCS Staff & Owner Admin Portal | Ranchi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    /* Admin specific additions */
+    .admin-body {
+      background: #090e1a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .admin-header {
+      background: #111827;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 1rem 0;
+    }
+    .admin-header-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .admin-nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding: 0.5rem 0;
+    }
+    .admin-tab-btn {
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .admin-tab-btn.active {
+      background: #2563eb;
+      color: #fff;
+      border-color: #3b82f6;
+    }
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card-admin {
+      background: #1e293b;
+      padding: 1.25rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .stat-card-admin .label {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .stat-card-admin .value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-top: 0.25rem;
+    }
+    .status-badge-pill {
+      display: inline-block;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-booked { background: #3b82f6; color: white; }
+    .badge-pickedup { background: #8b5cf6; color: white; }
+    .badge-transit { background: #f59e0b; color: #1e293b; }
+    .badge-out { background: #06b6d4; color: white; }
+    .badge-delivered { background: #10b981; color: white; }
+
+    .admin-filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .admin-search-input {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: white;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      min-width: 260px;
+    }
+    .admin-select {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: white;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+    }
+    .admin-login-box {
+      max-width: 420px;
+      margin: 5rem auto;
+      background: #1e293b;
+      padding: 2.5rem;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- ADMIN LOGIN VIEW (shown if not logged in) -->
+  <div id="admin-login-view" class="container">
+    <div class="admin-login-box text-center">
+      <div class="logo-icon mb-3" style="display:inline-flex; width:50px; height:50px; margin:0 auto;">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+      </div>
+      <h2 style="color:white; margin-bottom:0.5rem;">SNCS Admin Portal</h2>
+      <p style="color:#94a3b8; font-size:0.9rem; margin-bottom:1.5rem;">
+        Gandhi Market Overbridge Hub, Ranchi<br>Owner & Staff Access
+      </p>
+
+      <form id="admin-login-form" onsubmit="handleAdminLogin(event)">
+        <div class="form-group text-left mb-3">
+          <label style="color:#cbd5e1; font-size:0.85rem;">Username</label>
+          <input type="text" id="admin-username" required placeholder="admin or staff" value="admin" style="background:#0f172a; border-color:rgba(255,255,255,0.2); color:white;">
+        </div>
+        <div class="form-group text-left mb-4">
+          <label style="color:#cbd5e1; font-size:0.85rem;">Password / PIN</label>
+          <input type="password" id="admin-password" required placeholder="Enter password" value="admin123" style="background:#0f172a; border-color:rgba(255,255,255,0.2); color:white;">
+          <small style="color:#64748b; font-size:0.8rem; display:block; margin-top:4px;">Default: admin / admin123 (or staff / sncs834001)</small>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">
+          <span>Login to Portal</span>
+          <span>→</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADMIN PORTAL MAIN APP (shown when logged in) -->
+  <div id="admin-app-view" class="hidden" style="flex:1;">
+    <header class="admin-header">
+      <div class="container admin-header-inner">
+        <div style="display:flex; align-items:center; gap:1rem;">
+          <div class="logo-icon" style="width:36px; height:36px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+          </div>
+          <div>
+            <h2 style="font-size:1.25rem; font-weight:700; color:white; margin:0;">SNCS Courier Operations</h2>
+            <span style="font-size:0.8rem; color:#94a3b8;">Ranchi Central Hub • Staff Console</span>
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+          <div class="admin-live-pill" id="admin-live-badge">
+            <span class="live-pulse-radar"></span>
+            <span id="admin-live-text">Real-Time Sync</span>
+          </div>
+          <button onclick="openSimulationModal()" class="btn btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-color:rgba(245,158,11,0.5); color:#fbbf24;">
+            ⚡ Transit Simulator
+          </button>
+          <a href="/" target="_blank" class="btn btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.85rem;">🌐 View Website</a>
+          <a href="/api/admin/export-csv" class="btn btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.85rem;">📥 CSV Export</a>
+          <button onclick="handleAdminLogout()" class="btn btn-ghost" style="padding:0.4rem 0.8rem; font-size:0.85rem; color:#ef4444;">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="container" style="padding-top:1.5rem; padding-bottom:3rem;">
+      
+      <!-- Metrics Row -->
+      <div class="stats-row">
+        <div class="stat-card-admin">
+          <div class="label">Total Bookings</div>
+          <div class="value" id="stat-total-bookings">0</div>
+        </div>
+        <div class="stat-card-admin">
+          <div class="label">In Transit Hubs</div>
+          <div class="value text-accent" id="stat-in-transit">0</div>
+        </div>
+        <div class="stat-card-admin">
+          <div class="label">Out for Delivery</div>
+          <div class="value" style="color:#06b6d4;" id="stat-out-for-delivery">0</div>
+        </div>
+        <div class="stat-card-admin">
+          <div class="label">Delivered Successfully</div>
+          <div class="value" style="color:#10b981;" id="stat-delivered">0</div>
+        </div>
+        <div class="stat-card-admin">
+          <div class="label">Pending Pickups</div>
+          <div class="value" style="color:#f59e0b;" id="stat-pending-pickups">0</div>
+        </div>
+        <div class="stat-card-admin">
+          <div class="label">Total Revenue</div>
+          <div class="value" style="color:#22c55e;" id="stat-revenue">₹0</div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="admin-nav-tabs">
+        <button class="admin-tab-btn active" onclick="switchAdminTab('bookings')">📦 Consignments & Hub Updates</button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('rates')">💰 Rates & Zone Pricing</button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('pincodes')">📍 Pincodes Directory</button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('offers')">🎁 Festive Offer Banner</button>
+      </div>
+
+      <!-- TAB 1: BOOKINGS & HUB UPDATES -->
+      <div id="admin-tab-bookings" class="mt-4">
+        <div class="admin-filter-bar">
+          <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+            <input type="text" id="admin-search-query" class="admin-search-input" placeholder="Search Tracking ID, Mobile, City..." oninput="fetchAdminBookings()">
+            <select id="admin-status-filter" class="admin-select" onchange="fetchAdminBookings()">
+              <option value="">All Statuses</option>
+              <option value="Booking Confirmed">Booking Confirmed</option>
+              <option value="Picked Up">Picked Up</option>
+              <option value="In Transit">In Transit</option>
+              <option value="Out for Delivery">Out for Delivery</option>
+              <option value="Delivered">Delivered</option>
+            </select>
+          </div>
+          <button class="btn btn-secondary" onclick="fetchAdminBookings()">🔄 Refresh List</button>
+        </div>
+
+        <div class="card" style="background:#1e293b; border-color:rgba(255,255,255,0.08); padding:0; overflow:hidden;">
+          <div class="table-responsive">
+            <table class="data-table" style="margin:0;">
+              <thead>
+                <tr>
+                  <th>Tracking ID</th>
+                  <th>Sender</th>
+                  <th>Destination</th>
+                  <th>Weight</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Current Hub</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-bookings-tbody">
+                <!-- Dynamically loaded -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: RATES MANAGEMENT -->
+      <div id="admin-tab-rates" class="mt-4 hidden">
+        <div class="card" style="background:#1e293b; border-color:rgba(255,255,255,0.08);">
+          <div class="table-header">
+            <h3 style="color:white;">Zone Tariffs & Delivery TAT</h3>
+            <p style="color:#94a3b8; font-size:0.9rem;">Change prices for 1st kg and extra kg. Changes reflect instantly on customer calculator.</p>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Zone</th>
+                  <th>Zone Description</th>
+                  <th>1st kg Price (₹)</th>
+                  <th>Extra kg Price (₹)</th>
+                  <th>Delivery Days</th>
+                  <th>Save</th>
+                </tr>
+              </thead>
+              <tbody id="admin-rates-tbody">
+                <!-- Loaded via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: PINCODES MANAGEMENT -->
+      <div id="admin-tab-pincodes" class="mt-4 hidden">
+        <div class="grid-2-col" style="display:grid; grid-template-columns:1fr 2fr; gap:1.5rem;">
+          <div class="card" style="background:#1e293b; border-color:rgba(255,255,255,0.08);">
+            <h3 style="color:white; margin-bottom:1rem;">Add / Update Pincode</h3>
+            <form id="admin-pincode-form" onsubmit="handleSavePincode(event)">
+              <div class="form-group mb-2">
+                <label style="color:#cbd5e1; font-size:0.85rem;">Pincode (6 Digits)</label>
+                <input type="text" id="new-pin" maxlength="6" required placeholder="e.g. 834001" style="background:#0f172a; color:white;">
+              </div>
+              <div class="form-group mb-2">
+                <label style="color:#cbd5e1; font-size:0.85rem;">City / Hub Area</label>
+                <input type="text" id="new-pin-city" required placeholder="e.g. Ranchi Main Road" style="background:#0f172a; color:white;">
+              </div>
+              <div class="form-group mb-2">
+                <label style="color:#cbd5e1; font-size:0.85rem;">State</label>
+                <input type="text" id="new-pin-state" required placeholder="e.g. Jharkhand" value="Jharkhand" style="background:#0f172a; color:white;">
+              </div>
+              <div class="form-group mb-2">
+                <label style="color:#cbd5e1; font-size:0.85rem;">Zone</label>
+                <select id="new-pin-zone" class="admin-select" style="width:100%;">
+                  <option value="Zone 1">Zone 1 (Ranchi Local)</option>
+                  <option value="Zone 2">Zone 2 (Jharkhand State)</option>
+                  <option value="Zone 3">Zone 3 (Metro)</option>
+                  <option value="Zone 4">Zone 4 (Rest of India)</option>
+                </select>
+              </div>
+              <div class="form-group mb-3">
+                <label style="color:#cbd5e1; font-size:0.85rem;">TAT Days</label>
+                <input type="text" id="new-pin-tat" required placeholder="e.g. Same Day / 24 Hours" style="background:#0f172a; color:white;">
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">Save Pincode</button>
+            </form>
+          </div>
+
+          <div class="card" style="background:#1e293b; border-color:rgba(255,255,255,0.08);">
+            <div class="table-header">
+              <h3 style="color:white;">Current Pincodes List</h3>
+            </div>
+            <div class="table-responsive" style="max-height:450px; overflow-y:auto;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Pincode</th>
+                    <th>City</th>
+                    <th>Zone</th>
+                    <th>TAT</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-pincodes-tbody">
+                  <!-- Loaded via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: FESTIVE OFFERS MANAGEMENT -->
+      <div id="admin-tab-offers" class="mt-4 hidden">
+        <div class="card" style="background:#1e293b; border-color:rgba(255,255,255,0.08); max-width:650px;">
+          <h3 style="color:white; margin-bottom:1rem;">Festive & Promotional Banner Control</h3>
+          <p style="color:#94a3b8; font-size:0.9rem; margin-bottom:1.5rem;">
+            Control the top announcement banner on the customer website and define the discount amount for new bookings.
+          </p>
+
+          <form id="admin-offer-form" onsubmit="handleSaveOffer(event)">
+            <div class="form-group mb-3">
+              <label style="color:#cbd5e1; font-size:0.85rem;">Banner Announcement Text</label>
+              <textarea id="admin-offer-text" rows="3" required style="background:#0f172a; color:white; width:100%; border-radius:8px; padding:0.75rem; border:1px solid rgba(255,255,255,0.15);"></textarea>
+            </div>
+            <div class="form-group mb-3">
+              <label style="color:#cbd5e1; font-size:0.85rem;">Welcome Discount Amount (₹)</label>
+              <input type="number" id="admin-offer-discount" min="0" step="5" required style="background:#0f172a; color:white;">
+            </div>
+            <div class="form-group mb-4" style="display:flex; align-items:center; gap:0.5rem;">
+              <input type="checkbox" id="admin-offer-active" style="width:18px; height:18px; cursor:pointer;">
+              <label for="admin-offer-active" style="color:white; cursor:pointer; font-weight:600;">Show Banner on Website (Active)</label>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Offer Settings</button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- STATUS UPDATE MODAL -->
+  <div id="status-update-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="background:#1e293b; border:1px solid rgba(255,255,255,0.15); max-width:500px;">
+      <h3 style="color:white; margin-bottom:0.5rem;">Update Parcel Status</h3>
+      <p style="color:#94a3b8; font-size:0.9rem; margin-bottom:1.5rem;">
+        Consignment: <strong id="modal-update-tid" style="color:#38bdf8;"></strong>
+      </p>
+
+      <form id="update-status-form" onsubmit="handleStatusUpdateSubmit(event)">
+        <input type="hidden" id="modal-hidden-tid">
+        
+        <div class="form-group mb-3 text-left">
+          <label style="color:#cbd5e1; font-size:0.85rem;">New Milestone Status *</label>
+          <select id="modal-new-status" class="admin-select" style="width:100%;" required>
+            <option value="Picked Up">Picked Up (Ranchi Overbridge Hub)</option>
+            <option value="In Transit">In Transit (Dispatched to Next Hub)</option>
+            <option value="Out for Delivery">Out for Delivery (Rider Dispatched)</option>
+            <option value="Delivered">Delivered (Completed)</option>
+            <option value="Returned">Returned / Attempt Failed</option>
+          </select>
+        </div>
+
+        <div class="form-group mb-3 text-left">
+          <label style="color:#cbd5e1; font-size:0.85rem;">Current Hub Location Name *</label>
+          <input type="text" id="modal-new-hub" required placeholder="e.g. Ranchi Overbridge Central Hub" style="background:#0f172a; color:white; width:100%;">
+        </div>
+
+        <div class="form-group mb-4 text-left">
+          <label style="color:#cbd5e1; font-size:0.85rem;">Staff Remarks / Rider Note (Shown on Customer Timeline)</label>
+          <input type="text" id="modal-new-remarks" placeholder="e.g. Sorted at Hub 2, handed over to express surface van." style="background:#0f172a; color:white; width:100%;">
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:0.75rem;">
+          <button type="button" class="btn btn-ghost" onclick="closeStatusModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save & Broadcast Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TRANSIT SIMULATOR MODAL -->
+  <div id="simulation-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="background:#1e293b; border:1px solid rgba(245,158,11,0.3); max-width:480px;">
+      <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
+        <span style="font-size:1.5rem;">⚡</span>
+        <h3 style="color:white; margin:0;">Real-Time Transit Simulator</h3>
+      </div>
+      <p style="color:#94a3b8; font-size:0.88rem; margin-bottom:1.5rem;">
+        Simulate a real-time parcel journey across Ranchi hubs and destination delivery points. Watch live updates stream simultaneously in customer & admin portals.
+      </p>
+
+      <form id="sim-form" onsubmit="handleStartSimulation(event)">
+        <div class="form-group mb-3 text-left">
+          <label style="color:#cbd5e1; font-size:0.85rem;">Select Consignment to Simulate *</label>
+          <select id="sim-tracking-id" class="admin-select" style="width:100%;" required>
+            <option value="SNCS1024">SNCS1024 (Ranchi ➔ Kolkata)</option>
+            <option value="SNCS1025">SNCS1025 (Ranchi ➔ Harmu)</option>
+            <option value="SNCS1026">SNCS1026 (Ranchi ➔ Jamshedpur)</option>
+          </select>
+        </div>
+
+        <div class="form-group mb-4 text-left">
+          <label style="color:#cbd5e1; font-size:0.85rem;">Step Interval (Speed)</label>
+          <select id="sim-speed" class="admin-select" style="width:100%;">
+            <option value="4">Fast (4 seconds per hub)</option>
+            <option value="6" selected>Normal (6 seconds per hub)</option>
+            <option value="10">Slow (10 seconds per hub)</option>
+          </select>
+        </div>
+
+        <div id="sim-progress-box" class="hidden mb-3" style="background:#0f172a; padding:1rem; border-radius:8px; border:1px solid rgba(59,130,246,0.3);">
+          <div style="display:flex; justify-content:space-between; font-size:0.82rem; color:#93c5fd; margin-bottom:0.5rem;">
+            <span>🚀 Simulation Running Live...</span>
+            <span id="sim-status-timer">Active</span>
+          </div>
+          <div style="width:100%; background:rgba(255,255,255,0.1); height:6px; border-radius:3px; overflow:hidden;">
+            <div id="sim-progress-bar" style="width:20%; height:100%; background:#3b82f6; transition:width 0.4s ease;"></div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:0.75rem;">
+          <button type="button" class="btn btn-ghost" onclick="closeSimulationModal()">Close</button>
+          <button type="submit" id="sim-submit-btn" class="btn btn-primary" style="background:#f59e0b; border-color:#d97706; color:#0f172a; font-weight:700;">
+            ▶ Start Live Simulation
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/static/js/admin.js"></script>
+</body>
+</html>

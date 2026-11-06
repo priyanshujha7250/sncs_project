@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SNCS - Shri Network Courier Services | Ranchi Express Delivery</title>
+  <meta name="description" content="Shri Network Courier Services (SNCS), Gandhi Market, near Basera Hotel overbridge, Ranchi. Fast, affordable doorstep pickup and express parcel delivery across Jharkhand and India.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- Festive Banner -->
+  <aside id="festive-banner" class="festive-banner" aria-label="Special Offers">
+    <div class="container festive-content">
+      <span class="festive-tag">SPECIAL OFFER</span>
+      <p id="festive-text" class="festive-text">🎉 Flat ₹50 OFF on your first booking! Doorstep pickup available across Ranchi.</p>
+      <button class="festive-cta" onclick="handleBookNowClick(event)">Claim Discount →</button>
+    </div>
+  </aside>
+
+  <!-- Top Announcement Bar -->
+  <div class="top-bar">
+    <div class="header-container top-bar-inner">
+      <div class="top-info">
+        <span>📍 Gandhi Market, Near Basera Hotel Overbridge, Ranchi 834001</span>
+        <span class="divider">|</span>
+        <span>⏰ 9:00 AM - 10:00 PM (Daily)</span>
+      </div>
+      <div class="top-actions">
+        <a href="tel:7479814001" class="top-phone">📞 7479814001</a>
+        <a href="tel:6291414573" class="top-phone">📞 6291414573</a>
+        <button id="lang-toggle-btn" class="lang-btn" onclick="toggleLanguage()">🌐 हिंदी / ENG</button>
+        <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()">☀️ Light</button>
+        <a href="/admin" class="staff-login-link" target="_blank">🔑 Staff / Admin</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Navigation Header -->
+  <header class="main-header">
+    <div class="header-container">
+      <!-- 1. Left: Brand Logo -->
+      <div class="brand-logo" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+        <div class="logo-icon">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title">SNCS</h1>
+          <span class="brand-subtitle">Shri Network Courier Services</span>
+        </div>
+      </div>
+
+      <!-- 2. Center: Navigation Tabs (Track Parcel, Book & Pay, etc.) -->
+      <nav class="desktop-nav">
+        <button class="nav-btn active" data-tab="track" onclick="switchTab('track')">
+          <span class="nav-icon">🔍</span> <span data-i18n="nav_track">Track Parcel</span>
+        </button>
+        <button class="nav-btn" data-tab="book" onclick="switchTab('book')">
+          <span class="nav-icon">📦</span> <span data-i18n="nav_book">Book & Pay</span>
+        </button>
+        <button class="nav-btn" data-tab="price" onclick="switchTab('price')">
+          <span class="nav-icon">⚖️</span> <span data-i18n="nav_price">Rate Calculator</span>
+        </button>
+        <button class="nav-btn" data-tab="pincode" onclick="switchTab('pincode')">
+          <span class="nav-icon">📍</span> <span data-i18n="nav_pin">Pin Code Check</span>
+        </button>
+        <a href="#contact" class="nav-btn">
+          <span class="nav-icon">📞</span> <span data-i18n="nav_contact">Contact Us</span>
+        </a>
+      </nav>
+
+      <!-- 3. Right: Action Buttons (WhatsApp Pickup & Book Now) -->
+      <div class="header-cta-group">
+        <a href="https://wa.me/917479814001?text=Namaste%20SNCS%20Courier,%20I%20want%20to%20send%20a%20parcel%20from%20Ranchi" target="_blank" class="btn btn-whatsapp">
+          <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.668-.699c.969.544 1.761.814 2.792.814 3.181 0 5.768-2.586 5.768-5.766 0-3.18-2.587-5.766-5.768-5.766zm9.969 5.766c0 5.503-4.475 9.969-9.969 9.969-1.748 0-3.393-.453-4.831-1.246l-5.187 1.359 1.385-5.061c-.88-1.488-1.367-3.208-1.367-5.021 0-5.503 4.476-9.969 9.969-9.969 5.494 0 9.969 4.466 9.969 9.969z"/></svg>
+          <span>WhatsApp Pickup</span>
+        </a>
+        <button class="btn btn-primary" onclick="handleBookNowClick(event)">
+          <span>Book Now</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container hero-grid">
+      <div class="hero-text-col">
+        <div class="badge-pill">
+          <span class="pulse-dot"></span>
+          <span data-i18n="hero_badge">Ranchi's Most Reliable Express Delivery</span>
+        </div>
+        <h2 class="hero-headline" data-i18n="hero_title">
+          Ranchi se Poore Bharat Tak, <span class="gradient-text">Tez aur Bharosemand</span> Delivery
+        </h2>
+        <p class="hero-desc" data-i18n="hero_desc">
+          Shri Network Courier Services (SNCS) provides doorstep pickup across Ranchi, express surface & air network, live milestone tracking, and lowest transparent rates starting at ₹40.
+        </p>
+
+        <!-- Quick Tracking Search inside Hero -->
+        <div class="hero-track-card">
+          <form id="hero-track-form" onsubmit="handleQuickTrack(event)">
+            <div class="input-with-button">
+              <input type="text" id="hero-track-input" placeholder="Enter Tracking ID (e.g. SNCS1024)" required>
+              <button type="submit" class="btn btn-primary" id="hero-track-btn">
+                <span>Track Now</span>
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </form>
+          <div class="sample-ids">
+            <span>Try sample live tracking:</span>
+            <button type="button" class="chip-btn" onclick="testTrack('SNCS1024', true)">SNCS1024 (In Transit)</button>
+            <button type="button" class="chip-btn" onclick="testTrack('SNCS1025', true)">SNCS1025 (Delivered)</button>
+            <button type="button" class="chip-btn" onclick="testTrack('SNCS1026', true)">SNCS1026 (Out for Delivery)</button>
+          </div>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat-item">
+            <span class="stat-icon">📮</span>
+            <span class="stat-number">20,000+</span>
+            <span class="stat-label">Pin Codes Served</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-icon">⚡</span>
+            <span class="stat-number">12 Hours</span>
+            <span class="stat-label">Ranchi Same-Day</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-icon">🏷️</span>
+            <span class="stat-number">₹50 OFF</span>
+            <span class="stat-label">1st User Welcome</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-image-col">
+        <div class="image-wrapper glow-card">
+          <img src="/static/images/hero.png?v=2" alt="SNCS Express Courier Ranchi" class="hero-img">
+          <div class="floating-badge badge-top-right float-badge-1">
+            <span class="badge-icon">⚡</span>
+            <div>
+              <strong>12-Hour Local Express</strong>
+              <span>Same-Day Ranchi Delivery</span>
+            </div>
+          </div>
+          <div class="floating-badge badge-bottom-left float-badge-2">
+            <span class="badge-icon">🛡️</span>
+            <div>
+              <strong>100% Insured</strong>
+              <span>Safe & Secure Guarantee</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4-Card Quick Action Navigation Bar -->
+  <section class="action-dock-section">
+    <div class="container">
+      <div class="action-dock">
+        <button class="dock-card active" id="dock-btn-track" onclick="switchTab('track')">
+          <div class="dock-icon-box">🔍</div>
+          <div class="dock-text">
+            <h3 data-i18n="dock_track_title">Live Tracking</h3>
+            <p data-i18n="dock_track_desc">Real-time parcel timeline & stops</p>
+          </div>
+          <div class="dock-arrow">→</div>
+        </button>
+
+        <button class="dock-card" id="dock-btn-book" onclick="handleBookNowClick(event)">
+          <div class="dock-icon-box">📦</div>
+          <div class="dock-text">
+            <h3 data-i18n="dock_book_title">Book & Pay</h3>
+            <p data-i18n="dock_book_desc">Doorstep pickup & ₹50 discount</p>
+          </div>
+          <div class="dock-arrow">→</div>
+        </button>
+
+        <button class="dock-card" id="dock-btn-price" onclick="switchTab('price')">
+          <div class="dock-icon-box">⚖️</div>
+          <div class="dock-text">
+            <h3 data-i18n="dock_price_title">Price Calculator</h3>
+            <p data-i18n="dock_price_desc">Volumetric & actual weight rates</p>
+          </div>
+          <div class="dock-arrow">→</div>
+        </button>
+
+        <button class="dock-card" id="dock-btn-pincode" onclick="switchTab('pincode')">
+          <div class="dock-icon-box">📍</div>
+          <div class="dock-text">
+            <h3 data-i18n="dock_pin_title">Pin Code Check</h3>
+            <p data-i18n="dock_pin_desc">Verify coverage & delivery days</p>
+          </div>
+          <div class="dock-arrow">→</div>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN TABBED APP SECTION -->
+  <main class="main-content-area" id="app-workspace">
+    <div class="container">
+
+      <!-- ================= TAB 1: TRACKING ================= -->
+      <section id="tab-track" class="tab-panel active">
+        <div class="panel-header text-center">
+          <span class="section-tag">REAL-TIME SHIPMENT STATUS</span>
+          <h2>Track Your Consignment</h2>
+          <p>Enter your 8-character SNCS tracking ID to see current location, hub stoppages, and delivery timeline.</p>
+        </div>
+
+        <div class="card search-card">
+          <div class="input-with-button big-search">
+            <input type="text" id="track-id-input" placeholder="Enter Tracking ID (e.g. SNCS1024, SNCS1025)" value="SNCS1024">
+            <button class="btn btn-primary" onclick="executeTracking(true)">
+              <span>Track Status</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tracking Results Container -->
+        <div id="tracking-result-area" class="tracking-result-wrapper">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: BOOK & PAY ================= -->
+      <section id="tab-book" class="tab-panel">
+        <div class="panel-header text-center">
+          <span class="section-tag">DOORSTEP PICKUP & EXPRESS DISPATCH</span>
+          <h2>Book a Parcel Online</h2>
+          <p>Fill in sender and receiver details. First-time senders automatically get ₹50 FLAT DISCOUNT on entering their mobile number!</p>
+        </div>
+
+        <div class="booking-layout">
+          <!-- Booking Form -->
+          <form id="parcel-booking-form" class="card booking-form-card" onsubmit="handleBookingSubmit(event)">
+            
+            <!-- Step 1: Sender Details -->
+            <div class="booking-step-block step-active" id="step-block-1">
+              <div class="step-num-indicator">
+                <span class="step-num">1</span>
+                <span class="step-check">✓</span>
+              </div>
+              <div class="step-content">
+                <div class="form-section-title">
+                  <div>
+                    <h3>Sender Details (Ranchi Pickup Point)</h3>
+                    <p>Our agent will pick up the parcel from this address in Ranchi.</p>
+                  </div>
+                </div>
+
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label for="sender_name">Sender Full Name *</label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">👤</span>
+                      <input type="text" id="sender_name" required placeholder="e.g. Amitabh Verma">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="sender_mobile">Sender Mobile Number (10 Digits) *</label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">📞</span>
+                      <input type="tel" id="sender_mobile" required pattern="[0-9]{10}" placeholder="e.g. 9835123456" oninput="checkFirstBookingDiscount(this.value)">
+                    </div>
+                    <small id="mobile-discount-tip" class="tip-text">Checking welcome discount eligibility...</small>
+                  </div>
+                </div>
+
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label for="sender_email">Email Address (For e-receipt)</label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">✉️</span>
+                      <input type="email" id="sender_email" placeholder="e.g. customer@gmail.com">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="sender_pincode">Ranchi Pickup Pincode *</label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">📍</span>
+                      <input type="text" id="sender_pincode" required value="834001" placeholder="834001">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="sender_address">Pickup Address & Landmark in Ranchi *</label>
+                  <div class="input-with-icon icon-textarea-wrapper">
+                    <span class="field-icon">🏠</span>
+                    <textarea id="sender_address" required rows="2" placeholder="e.g. Near Basera Hotel overbridge, Gandhi Market, Ranchi"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2: Receiver Details -->
+            <div class="booking-step-block" id="step-block-2">
+              <div class="step-num-indicator">
+                <span class="step-num">2</span>
+                <span class="step-check">✓</span>
+              </div>
+              <div class="step-content">
+                <div class="form-section-title">
+                  <div>
+                    <h3>Receiver Details (Destination)</h3>
+                    <p>Where should this parcel be delivered?</p>
+                  </div>
+                </div>
+
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label for="receiver_name">Receiver Full Name *</label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">👤</span>
+                      <input type="text" id="receiver_name" required placeholder="e.g. Rajesh Sen">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="receiver_mobile">Receiver Mobile Number *</label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">📞</span>
+                      <input type="tel" id="receiver_mobile" required pattern="[0-9]{10}" placeholder="e.g. 9830054321">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label for="receiver_pincode">Destination PIN Code *</label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">📍</span>
+                      <input type="text" id="receiver_pincode" required maxlength="6" placeholder="e.g. 700001 or 831001" oninput="handleBookingPinChange(this.value)" onchange="handleBookingPinChange(this.value)" onblur="handleBookingPinChange(this.value)">
+                    </div>
+                    <div id="booking-pin-status" class="booking-pin-status-box">
+                      <span class="tip-text" style="color: #94a3b8;">Enter 6-digit destination PIN code to detect city & serviceability.</span>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="receiver_city">Destination City / State</label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">🏙️</span>
+                      <input type="text" id="receiver_city" required placeholder="Auto-detected from PIN" readonly style="cursor: default; background: rgba(255,255,255,0.04);">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="receiver_address">Delivery Full Address & Landmark *</label>
+                  <div class="input-with-icon icon-textarea-wrapper">
+                    <span class="field-icon">🏢</span>
+                    <textarea id="receiver_address" required rows="2" placeholder="Street, Flat/House no, Landmark, Area"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3: Parcel Specs -->
+            <div class="booking-step-block" id="step-block-3">
+              <div class="step-num-indicator">
+                <span class="step-num">3</span>
+                <span class="step-check">✓</span>
+              </div>
+              <div class="step-content">
+                <div class="form-section-title">
+                  <div>
+                    <h3>Package Dimensions & Weight</h3>
+                    <p>Chargeable weight is calculated automatically: max(actual weight, L×W×H ÷ 5000).</p>
+                  </div>
+                </div>
+
+                <div class="form-grid-4">
+                  <div class="form-group">
+                    <label for="pkg_weight">Actual Wt (kg) *</label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">⚖️</span>
+                      <input type="number" id="pkg_weight" step="0.1" min="0.1" value="1.0" required oninput="recalculateBookingQuote()">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="pkg_len">Length (cm)</label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">📏</span>
+                      <input type="number" id="pkg_len" step="1" min="0" value="20" oninput="recalculateBookingQuote()">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="pkg_width">Width (cm)</label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">📏</span>
+                      <input type="number" id="pkg_width" step="1" min="0" value="15" oninput="recalculateBookingQuote()">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="pkg_height">Height (cm)</label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">📏</span>
+                      <input type="number" id="pkg_height" step="1" min="0" value="10" oninput="recalculateBookingQuote()">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="package_type">Package Contents / Category</label>
+                  <div class="input-with-icon">
+                    <span class="field-icon">📦</span>
+                    <select id="package_type">
+                      <option value="Documents & Papers">Documents & Papers (Urgent)</option>
+                      <option value="Textiles & Apparel" selected>Textiles & Apparel</option>
+                      <option value="Electronics & Gadgets">Electronics & Gadgets (Fragile)</option>
+                      <option value="Food & Medicines">Dry Food & Medicines</option>
+                      <option value="Books & Stationery">Books & Stationery</option>
+                      <option value="Commercial Samples">Commercial Samples / Tools</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 4: Payment Method -->
+            <div class="booking-step-block" id="step-block-4">
+              <div class="step-num-indicator">
+                <span class="step-num">4</span>
+                <span class="step-check">✓</span>
+              </div>
+              <div class="step-content">
+                <div class="form-section-title">
+                  <div>
+                    <h3>Payment Method</h3>
+                    <p>Choose instant online payment (Razorpay / UPI) or Cash at Doorstep Pickup.</p>
+                  </div>
+                </div>
+
+                <div class="payment-method-selector">
+                  <label class="payment-option">
+                    <input type="radio" name="payment_mode" value="Online (UPI/Razorpay)" checked>
+                    <div class="payment-card-box">
+                      <span class="pay-icon">📱</span>
+                      <div>
+                        <strong>Online UPI / Razorpay</strong>
+                        <span>Instant confirmation via Google Pay, PhonePe, Paytm, Cards</span>
+                      </div>
+                    </div>
+                  </label>
+
+                  <label class="payment-option">
+                    <input type="radio" name="payment_mode" value="Cash at Pickup">
+                    <div class="payment-card-box">
+                      <span class="pay-icon">💵</span>
+                      <div>
+                        <strong>Cash at Doorstep Pickup</strong>
+                        <span>Pay directly to our Ranchi rider upon parcel pickup</span>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                <button type="submit" id="book-submit-btn" class="btn btn-primary btn-block btn-lg btn-disabled-unreachable" disabled title="Please enter a valid serviceable destination PIN code">
+                  <span>Enter Serviceable Destination PIN to Book</span>
+                  <span>→</span>
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- Live Pricing Sticky Summary -->
+          <div class="booking-summary-sidebar">
+            <div class="card summary-card elevated-sticky-card">
+              <div class="summary-header">
+                <div>
+                  <h3>Rate Summary</h3>
+                  <span class="summary-sub">Instant Doorstep Calculation</span>
+                </div>
+                <span class="badge badge-accent" id="summary-zone-badge">Zone 1</span>
+              </div>
+
+              <div class="summary-specs">
+                <div class="spec-row">
+                  <span>Actual Weight:</span>
+                  <strong id="sum-actual-w">1.0 kg</strong>
+                </div>
+                <div class="spec-row">
+                  <span>Volumetric (L×W×H÷5000):</span>
+                  <strong id="sum-vol-w">0.6 kg</strong>
+                </div>
+                <div class="spec-row highlight-spec">
+                  <span>Chargeable Weight:</span>
+                  <strong id="sum-charge-w">1.0 kg</strong>
+                </div>
+                <div class="spec-row">
+                  <span>Estimated Delivery:</span>
+                  <strong id="sum-tat">Same Day / 24 Hours</strong>
+                </div>
+                <div class="spec-row">
+                  <span>Transit Stoppages:</span>
+                  <strong id="sum-stops">1 Direct Hub</strong>
+                </div>
+              </div>
+
+              <div class="divider-line"></div>
+
+              <div class="summary-pricing">
+                <div class="price-row">
+                  <span>Base Courier Charge:</span>
+                  <span id="sum-base-price">₹40.00</span>
+                </div>
+                <div class="price-row discount-row" id="sum-discount-row">
+                  <span>First Booking Offer:</span>
+                  <span class="discount-val" id="sum-discount-val">- ₹50.00</span>
+                </div>
+                <div class="total-highlight-box">
+                  <div class="total-label-group">
+                    <span class="total-main-title">Total Amount Payable:</span>
+                    <span class="tax-tag">Doorstep pickup incl.</span>
+                  </div>
+                  <span class="final-price" id="sum-final-price">₹40.00</span>
+                </div>
+              </div>
+
+              <div class="guarantee-box">
+                <div class="guar-item">
+                  <span>🛡️</span>
+                  <p>100% Tracking Guarantee from Gandhi Market Overbridge Hub</p>
+                </div>
+                <div class="guar-item">
+                  <span>⚡</span>
+                  <p>Daily Cut-off: Book before 4:00 PM for Same-Day dispatch</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Receipt Modal after Booking -->
+        <div id="booking-receipt-modal" class="modal-overlay hidden">
+          <div class="modal-card receipt-card">
+            <div class="receipt-header">
+              <div class="receipt-brand">
+                <h2>Shri Network Courier Services</h2>
+                <p>Gandhi Market, near Basera Hotel overbridge, Ranchi 834001</p>
+                <p>Helpline: 7479814001 | 6291414573</p>
+              </div>
+              <div class="receipt-status-badge">
+                <span id="modal-payment-badge" class="badge badge-success">BOOKED</span>
+              </div>
+            </div>
+
+            <div class="receipt-tracking-banner">
+              <span class="label">CONSIGNMENT TRACKING ID</span>
+              <h1 id="modal-tracking-id" class="tracking-number">SNCS1027</h1>
+              <p>Keep this number safe to track live status at sncs.in</p>
+            </div>
+
+            <div class="receipt-details-grid">
+              <div>
+                <strong>Sender:</strong>
+                <p id="modal-sender-text"></p>
+              </div>
+              <div>
+                <strong>Receiver:</strong>
+                <p id="modal-receiver-text"></p>
+              </div>
+              <div>
+                <strong>Chargeable Weight:</strong>
+                <p id="modal-weight-text"></p>
+              </div>
+              <div>
+                <strong>Expected Delivery:</strong>
+                <p id="modal-delivery-text"></p>
+              </div>
+            </div>
+
+            <div class="receipt-payment-row">
+              <div>
+                <span class="label">Payment Mode:</span>
+                <strong id="modal-paymode-text">Online UPI / Razorpay</strong>
+              </div>
+              <div class="text-right">
+                <span class="label">Total Paid:</span>
+                <h2 id="modal-amount-text" class="text-accent">₹40.00</h2>
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button class="btn btn-secondary" onclick="window.print()">🖨️ Print Receipt</button>
+              <button class="btn btn-whatsapp" id="modal-wa-btn" onclick="shareReceiptWhatsApp()">📲 Share on WhatsApp</button>
+              <button class="btn btn-primary" onclick="viewReceiptInTracker()">🔍 Track Right Now</button>
+              <button class="btn btn-ghost" onclick="closeReceiptModal()">✕ Close</button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================= TAB 3: PRICE CALCULATOR ================= -->
+      <section id="tab-price" class="tab-panel">
+        <div class="panel-header text-center">
+          <span class="section-tag">TRANSPARENT TARIFF ESTIMATOR</span>
+          <h2>Calculate Courier Charges</h2>
+          <p>Get instant price quotes based on destination zone, volumetric dimensions, and actual weight.</p>
+        </div>
+
+        <div class="calc-container card">
+          <div class="calc-inputs-grid">
+            <div class="form-group">
+              <label for="calc-destination-zone">Select Destination Region / Zone</label>
+              <select id="calc-destination-zone" onchange="runLiveCalculator()">
+                <option value="Zone 1">Zone 1: Ranchi Local (Same Day / 24 Hours)</option>
+                <option value="Zone 2">Zone 2: Jharkhand State (Jamshedpur, Dhanbad, Bokaro, etc.)</option>
+                <option value="Zone 3" selected>Zone 3: Metro Hubs (Kolkata, Delhi, Mumbai, Bengaluru, Patna)</option>
+                <option value="Zone 4">Zone 4: Rest of India (South, West, North-East)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="calc-actual-weight">Actual Weight (kg)</label>
+              <input type="number" id="calc-actual-weight" min="0.1" step="0.1" value="2.0" oninput="runLiveCalculator()">
+            </div>
+          </div>
+
+          <div class="volumetric-box">
+            <h4>📦 Volumetric Dimensions (Optional - For bulky parcels)</h4>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label for="calc-len">Length (cm)</label>
+                <input type="number" id="calc-len" min="0" value="25" oninput="runLiveCalculator()">
+              </div>
+              <div class="form-group">
+                <label for="calc-width">Width (cm)</label>
+                <input type="number" id="calc-width" min="0" value="20" oninput="runLiveCalculator()">
+              </div>
+              <div class="form-group">
+                <label for="calc-height">Height (cm)</label>
+                <input type="number" id="calc-height" min="0" value="15" oninput="runLiveCalculator()">
+              </div>
+            </div>
+            <p class="formula-caption">Standard Courier Formula: Volumetric Weight = (Length × Width × Height in cm) ÷ 5000</p>
+          </div>
+
+          <!-- Live Rate Output Card -->
+          <div class="calc-output-card" id="calc-output-box">
+            <div class="calc-output-header">
+              <div>
+                <span class="label">ESTIMATED TOTAL TARIFF</span>
+                <h1 class="calc-price-display" id="calc-total-display">₹110.00</h1>
+              </div>
+              <div class="calc-meta-pill">
+                <span id="calc-tat-display">2 - 4 Days</span>
+                <span class="divider">•</span>
+                <span id="calc-stops-display">3 Stoppages</span>
+              </div>
+            </div>
+
+            <div class="calc-breakdown-table">
+              <div class="breakdown-row">
+                <span>Chargeable Weight Applied:</span>
+                <strong id="calc-ch-weight-display">2.0 kg</strong>
+              </div>
+              <div class="breakdown-row">
+                <span>Base Charge (1st kg):</span>
+                <strong id="calc-base-display">₹110.00</strong>
+              </div>
+              <div class="breakdown-row">
+                <span>Additional kg Charge:</span>
+                <strong id="calc-extra-display">₹60.00</strong>
+              </div>
+              <div class="breakdown-row discount-row">
+                <span>First-Time User Discount (New Mobile):</span>
+                <strong class="discount-val">- ₹50.00</strong>
+              </div>
+            </div>
+
+            <div class="calc-footer-cta">
+              <button class="btn btn-primary btn-block" onclick="switchTab('book')">
+                Book Parcel at This Rate →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tariff Comparison Table -->
+        <div class="card mt-4">
+          <div class="table-header">
+            <h3>SNCS Official Courier Rate Card (Ranchi Origin)</h3>
+            <span class="badge badge-info">Valid for 2026</span>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Zone</th>
+                  <th>Coverage Area</th>
+                  <th>First 1 kg</th>
+                  <th>Extra per kg</th>
+                  <th>Delivery Days</th>
+                  <th>Hub Stops</th>
+                </tr>
+              </thead>
+              <tbody id="rates-table-body">
+                <!-- Loaded from API -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: PINCODE CHECKER ================= -->
+      <section id="tab-pincode" class="tab-panel">
+        <div class="panel-header text-center">
+          <span class="section-tag">SERVICEABILITY DIRECTORY</span>
+          <h2>Pincode Coverage & TAT Checker</h2>
+          <p>Check if your destination pincode is serviceable by SNCS and check estimated transit days.</p>
+        </div>
+
+        <div class="card pincode-card">
+          <div class="input-with-button big-search">
+            <input type="text" id="pincode-search-input" maxlength="6" placeholder="Enter 6-digit Pincode (e.g. 834001, 831001, 700001, 110001)">
+            <button class="btn btn-primary" onclick="executePincodeCheck()">
+              <span>Check Serviceability</span>
+            </button>
+          </div>
+
+          <div class="quick-pins">
+            <span>Popular Jharkhand Pincodes:</span>
+            <button class="chip-btn" onclick="checkSpecificPin('834001')">834001 (Ranchi Main)</button>
+            <button class="chip-btn" onclick="checkSpecificPin('834002')">834002 (Doranda)</button>
+            <button class="chip-btn" onclick="checkSpecificPin('831001')">831001 (Jamshedpur)</button>
+            <button class="chip-btn" onclick="checkSpecificPin('826001')">826001 (Dhanbad)</button>
+            <button class="chip-btn" onclick="checkSpecificPin('827001')">827001 (Bokaro)</button>
+            <button class="chip-btn" onclick="checkSpecificPin('700001')">700001 (Kolkata)</button>
+          </div>
+
+          <div id="pincode-result-box" class="pincode-result-container hidden">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- How It Works Section -->
+  <section class="how-it-works-section">
+    <div class="container">
+      <div class="section-heading text-center">
+        <span class="section-tag">SIMPLE 4-STEP PROCESS</span>
+        <h2>How SNCS Courier Works</h2>
+        <p>From Ranchi doorstep to nationwide delivery in seamless coordination.</p>
+      </div>
+
+      <!-- Flow Track with Animated Truck -->
+      <div class="how-it-works-flow-track">
+        <div class="flow-track-line">
+          <div class="flow-truck-tracer">
+            <span class="tracer-truck-icon">🚚</span>
+          </div>
+        </div>
+
+        <div class="steps-grid">
+          <div class="step-card bento-step-card">
+            <div class="step-bubble">1</div>
+            <div class="step-icon-circle icon-circle-blue">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+              </svg>
+            </div>
+            <h3>Book or Call</h3>
+            <p>Book online in 60 seconds or call our Gandhi Market counter for doorstep collection.</p>
+          </div>
+
+          <div class="step-card bento-step-card">
+            <div class="step-bubble">2</div>
+            <div class="step-icon-circle icon-circle-amber">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="18.5" cy="17.5" r="3.5"></circle>
+                <circle cx="5.5" cy="17.5" r="3.5"></circle>
+                <circle cx="15" cy="5" r="1"></circle>
+                <path d="M12 17.5V14l-3-3 4-3 2 3h2"></path>
+              </svg>
+            </div>
+            <h3>Doorstep Pickup</h3>
+            <p>Our rider collects the parcel anywhere in Ranchi, weighs it transparently and hands you an instant receipt.</p>
+          </div>
+
+          <div class="step-card bento-step-card">
+            <div class="step-bubble">3</div>
+            <div class="step-icon-circle icon-circle-emerald">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="3" width="15" height="13"></rect>
+                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+              </svg>
+            </div>
+            <h3>Express Transit</h3>
+            <p>Dispatched through our Overbridge Central Hub via air/surface express with live milestone scans.</p>
+          </div>
+
+          <div class="step-card bento-step-card">
+            <div class="step-bubble">4</div>
+            <div class="step-icon-circle icon-circle-indigo">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                <polyline points="7.5 10.5 10.5 13.5 16.5 7.5"></polyline>
+              </svg>
+            </div>
+            <h3>Secure Delivery</h3>
+            <p>Delivered safely to receiver's doorstep with instant delivery SMS & digital confirmation.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Urgent Parcel Dispatch Emergency Banner -->
+  <section class="urgent-dispatch-banner">
+    <div class="container">
+      <div class="urgent-banner-inner">
+        <div class="urgent-left">
+          <div class="urgent-phone-badge">
+            <span class="urgent-radar-pulse"></span>
+            <span class="urgent-phone-icon">📞</span>
+          </div>
+          <div class="urgent-text">
+            <span class="urgent-badge-pill">⚡ SAME-DAY EMERGENCY DESK</span>
+            <h3>Urgent Parcel Dispatch Needed in Ranchi?</h3>
+            <p>Call our Gandhi Market Overbridge counter manager directly for same-day emergency pickup, medicine dispatch, or urgent documents.</p>
+          </div>
+        </div>
+        <div class="urgent-cta-actions">
+          <a href="tel:7479814001" class="btn btn-urgent-call">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            <span>Call Counter Manager</span>
+          </a>
+          <a href="https://wa.me/917479814001?text=Namaste%20SNCS%20Courier,%20I%20need%20urgent%20same-day%20parcel%20dispatch%20from%20Ranchi." target="_blank" class="btn btn-urgent-wa">
+            <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.668-.699c.969.544 1.761.814 2.792.814 3.181 0 5.768-2.586 5.768-5.766 0-3.18-2.587-5.766-5.768-5.766zm9.969 5.766c0 5.503-4.475 9.969-9.969 9.969-1.748 0-3.393-.453-4.831-1.246l-5.187 1.359 1.385-5.061c-.88-1.488-1.367-3.208-1.367-5.021 0-5.503 4.476-9.969 9.969-9.969 5.494 0 9.969 4.466 9.969 9.969z"/></svg>
+            <span>WhatsApp Dispatch</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Location & Contact Section -->
+  <footer id="contact" class="main-footer">
+    <div class="container footer-grid">
+      <div class="footer-about">
+        <div class="brand-logo footer-logo">
+          <div class="logo-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+            </svg>
+          </div>
+          <span class="brand-title">SNCS</span>
+        </div>
+        <p class="footer-brand-name">Shri Network Courier Services</p>
+        <p class="footer-bio">
+          Ranchi's trusted partner for personal, corporate, e-commerce, and emergency courier consignments across Jharkhand & pan-India.
+        </p>
+        <div class="footer-contact-items">
+          <div class="contact-line">
+            <span class="c-icon">📍</span>
+            <span>Gandhi Market, near Basera Hotel overbridge, Ranchi, Jharkhand 834001</span>
+          </div>
+          <div class="contact-line">
+            <span class="c-icon">📞</span>
+            <span><a href="tel:7479814001">7479814001</a> / <a href="tel:6291414573">6291414573</a></span>
+          </div>
+          <div class="contact-line">
+            <span class="c-icon">✉️</span>
+            <span><a href="mailto:priyanshujha@gmail.com">priyanshujha@gmail.com</a></span>
+          </div>
+          <div class="contact-line">
+            <span class="c-icon">⏰</span>
+            <span>Monday - Sunday: 9:00 AM to 10:00 PM</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-links">
+        <h4>Quick Navigation</h4>
+        <ul class="animated-footer-list">
+          <li><a href="javascript:switchTab('track')"><span>→</span> Live Parcel Tracking</a></li>
+          <li><a href="javascript:switchTab('book')"><span>→</span> Book Consignment</a></li>
+          <li><a href="javascript:switchTab('price')"><span>→</span> Rates & Price Calculator</a></li>
+          <li><a href="javascript:switchTab('pincode')"><span>→</span> Pin Code Directory</a></li>
+          <li><a href="/admin"><span>→</span> Staff Admin Panel</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-links">
+        <h4>Key Services</h4>
+        <ul class="animated-footer-list">
+          <li><a href="javascript:switchTab('book')"><span>→</span> Doorstep Parcel Pickup in Ranchi</a></li>
+          <li><a href="javascript:switchTab('price')"><span>→</span> Same-Day Local Ranchi Courier</a></li>
+          <li><a href="javascript:switchTab('pincode')"><span>→</span> Jharkhand State Express Route</a></li>
+          <li><a href="javascript:switchTab('price')"><span>→</span> Metro City Air & Surface Network</a></li>
+          <li><a href="javascript:switchTab('book')"><span>→</span> Cash on Pickup Available</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-cta-col">
+        <h4>Need Emergency Dispatch?</h4>
+        <p>Call our counter manager directly for urgent parcels, medicine delivery, or bulk business rates.</p>
+        <a href="tel:7479814001" class="btn btn-primary btn-block">📞 Call 7479814001</a>
+        <a href="https://wa.me/917479814001" target="_blank" class="btn btn-whatsapp btn-block mt-2">💬 WhatsApp Counter</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="container footer-bottom-inner">
+        <p>© 2026 Shri Network Courier Services (SNCS). Ranchi, Jharkhand. All rights reserved.</p>
+        <p>Ranchi Hub: Gandhi Market Overbridge Facility</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -6,19 +6,77 @@
 let adminToken = false;
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Check if session exists or auto-login with default if opened locally
+  // Always verify authenticated session before opening console
   checkSession();
 });
 
 async function checkSession() {
+  // If the browser tab or window was closed, sessionStorage is automatically wiped clean by the browser.
+  const hasActiveTabSession = sessionStorage.getItem('sncs_admin_tab_active');
+  if (!hasActiveTabSession) {
+    // Site or tab was closed previously - purge any backend session and enforce fresh login
+    try {
+      await fetch('/api/admin/logout', { method: 'POST' });
+    } catch (err) {}
+    showLoginForm();
+    return;
+  }
+
   try {
-    const res = await fetch('/api/admin/dashboard');
+    const res = await fetch('/api/admin/check-session');
     if (res.ok) {
-      showAdminApp();
-      loadAllAdminData();
+      const data = await res.json();
+      if (data.authenticated) {
+        showAdminApp(data.username, data.role);
+        loadAllAdminData();
+        return;
+      }
     }
   } catch (err) {
-    console.log('Not logged in yet');
+    console.log('Session check:', err);
+  }
+  showLoginForm();
+}
+
+function showLoginForm() {
+  sessionStorage.removeItem('sncs_admin_tab_active');
+  if (window._adminEventSource) {
+    window._adminEventSource.close();
+    window._adminEventSource = null;
+  }
+  document.getElementById('admin-app-view').classList.add('hidden');
+  document.getElementById('admin-login-view').classList.remove('hidden');
+  const userField = document.getElementById('admin-username');
+  if (userField) {
+    userField.value = '';
+  }
+  const passField = document.getElementById('admin-password');
+  if (passField) passField.value = '';
+  const errorEl = document.getElementById('admin-login-error');
+  if (errorEl) errorEl.classList.add('hidden');
+}
+
+function showAdminApp(username, role) {
+  document.getElementById('admin-login-view').classList.add('hidden');
+  document.getElementById('admin-app-view').classList.remove('hidden');
+  if (document.getElementById('logged-username')) {
+    document.getElementById('logged-username').innerText = username || 'Staff';
+  }
+  if (document.getElementById('logged-role')) {
+    document.getElementById('logged-role').innerText = (role || 'staff').toUpperCase();
+  }
+}
+
+function toggleAdminPasswordVisibility() {
+  const p = document.getElementById('admin-password');
+  const icon = document.getElementById('toggle-pwd-btn');
+  if (!p) return;
+  if (p.type === 'password') {
+    p.type = 'text';
+    if (icon) icon.innerText = '🙈';
+  } else {
+    p.type = 'password';
+    if (icon) icon.innerText = '👁️';
   }
 }
 
@@ -26,6 +84,21 @@ async function handleAdminLogin(e) {
   e.preventDefault();
   const u = document.getElementById('admin-username').value.trim();
   const p = document.getElementById('admin-password').value.trim();
+  const errorEl = document.getElementById('admin-login-error');
+  const submitBtn = document.getElementById('admin-login-btn');
+
+  if (!u || !p) {
+    if (errorEl) {
+      errorEl.innerText = "Please enter both username and password.";
+      errorEl.classList.remove('hidden');
+    }
+    return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span>Verifying Credentials...</span>';
+  }
 
   try {
     const res = await fetch('/api/admin/login', {
@@ -35,23 +108,35 @@ async function handleAdminLogin(e) {
     });
     const data = await res.json();
 
-    if (data.success) {
-      showAdminApp();
+    if (res.ok && data.success) {
+      // Mark current tab session as active
+      sessionStorage.setItem('sncs_admin_tab_active', 'true');
+      if (errorEl) errorEl.classList.add('hidden');
+      showAdminApp(data.username, data.role);
       loadAllAdminData();
     } else {
-      alert(data.message || 'Login failed. Check credentials.');
+      sessionStorage.removeItem('sncs_admin_tab_active');
+      if (errorEl) {
+        errorEl.innerText = `❌ ${data.message || 'Access Denied: Invalid credentials.'}`;
+        errorEl.classList.remove('hidden');
+      }
     }
   } catch (err) {
-    alert('Connection error');
+    sessionStorage.removeItem('sncs_admin_tab_active');
+    if (errorEl) {
+      errorEl.innerText = "⚠️ Network connection error. Please retry.";
+      errorEl.classList.remove('hidden');
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span>Secure Staff Login</span><span>→</span>';
+    }
   }
 }
 
-function showAdminApp() {
-  document.getElementById('admin-login-view').classList.add('hidden');
-  document.getElementById('admin-app-view').classList.remove('hidden');
-}
-
 async function handleAdminLogout() {
+  sessionStorage.removeItem('sncs_admin_tab_active');
   if (window._adminEventSource) {
     window._adminEventSource.close();
     window._adminEventSource = null;
@@ -59,8 +144,7 @@ async function handleAdminLogout() {
   try {
     await fetch('/api/admin/logout', { method: 'POST' });
   } catch(e){}
-  document.getElementById('admin-app-view').classList.add('hidden');
-  document.getElementById('admin-login-view').classList.remove('hidden');
+  showLoginForm();
 }
 
 function switchAdminTab(tab) {
@@ -87,6 +171,10 @@ function loadAllAdminData() {
 async function fetchAdminDashboard() {
   try {
     const res = await fetch('/api/admin/dashboard');
+    if (res.status === 401) {
+      showLoginForm();
+      return;
+    }
     const data = await res.json();
 
     document.getElementById('stat-total-bookings').innerText = data.total_bookings;
@@ -107,6 +195,10 @@ async function fetchAdminBookings() {
 
   try {
     const res = await fetch(`/api/admin/bookings?q=${encodeURIComponent(q)}&status=${encodeURIComponent(status)}`);
+    if (res.status === 401) {
+      showLoginForm();
+      return;
+    }
     const list = await res.json();
     const tbody = document.getElementById('admin-bookings-tbody');
 
@@ -240,6 +332,10 @@ async function saveRate(rateId) {
 async function fetchAdminPincodes() {
   try {
     const res = await fetch('/api/admin/pincodes');
+    if (res.status === 401) {
+      showLoginForm();
+      return;
+    }
     const pins = await res.json();
     const tbody = document.getElementById('admin-pincodes-tbody');
 
@@ -287,6 +383,10 @@ async function handleSavePincode(e) {
 async function fetchAdminOffers() {
   try {
     const res = await fetch('/api/admin/offers');
+    if (res.status === 401) {
+      showLoginForm();
+      return;
+    }
     const offer = await res.json();
 
     document.getElementById('admin-offer-text').value = offer.text || '';
@@ -546,4 +646,86 @@ async function handleStartSimulation(e) {
     btn.innerText = "▶ Start Live Simulation";
   }
 }
+
+// ==========================================================
+// CHANGE PASSWORD / PIN MODAL HANDLERS
+// ==========================================================
+
+function openChangePasswordModal() {
+  const modal = document.getElementById('change-password-modal');
+  if (modal) modal.classList.remove('hidden');
+  const err = document.getElementById('pwd-change-error');
+  if (err) err.classList.add('hidden');
+  const succ = document.getElementById('pwd-change-success');
+  if (succ) succ.classList.add('hidden');
+  document.getElementById('pwd-current').value = '';
+  document.getElementById('pwd-new').value = '';
+  document.getElementById('pwd-confirm').value = '';
+}
+
+function closeChangePasswordModal() {
+  const modal = document.getElementById('change-password-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function handleChangePasswordSubmit(e) {
+  e.preventDefault();
+  const current = document.getElementById('pwd-current').value.trim();
+  const newPwd = document.getElementById('pwd-new').value.trim();
+  const confirmPwd = document.getElementById('pwd-confirm').value.trim();
+  const errEl = document.getElementById('pwd-change-error');
+  const succEl = document.getElementById('pwd-change-success');
+  const submitBtn = document.getElementById('pwd-submit-btn');
+
+  errEl.classList.add('hidden');
+  succEl.classList.add('hidden');
+
+  if (newPwd !== confirmPwd) {
+    errEl.innerText = "New passwords do not match. Please verify.";
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  if (newPwd.length < 6) {
+    errEl.innerText = "New password must be at least 6 characters long.";
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.innerText = "Updating Password...";
+
+  try {
+    const res = await fetch('/api/admin/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        current_password: current,
+        new_password: newPwd
+      })
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      succEl.innerText = data.message || "Password updated successfully!";
+      succEl.classList.remove('hidden');
+      document.getElementById('pwd-current').value = '';
+      document.getElementById('pwd-new').value = '';
+      document.getElementById('pwd-confirm').value = '';
+      setTimeout(() => {
+        closeChangePasswordModal();
+      }, 2000);
+    } else {
+      errEl.innerText = data.message || "Failed to change password.";
+      errEl.classList.remove('hidden');
+    }
+  } catch (err) {
+    errEl.innerText = "Connection error. Please try again.";
+    errEl.classList.remove('hidden');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerText = "Update Password";
+  }
+}
+
 

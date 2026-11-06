@@ -138,6 +138,11 @@ function switchTab(tabId, shouldScroll = true) {
     btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
   });
 
+  // Update mobile bottom dock
+  document.querySelectorAll('.mobile-bottom-dock .mobile-dock-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
+  });
+
   // Update action dock
   document.querySelectorAll('.dock-card').forEach(card => {
     card.classList.toggle('active', card.id === `dock-btn-${tabId}`);

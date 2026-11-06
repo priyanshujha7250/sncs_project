@@ -83,6 +83,9 @@ body.dark-mode {
 html {
   scroll-behavior: smooth;
   font-size: 16px;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
 /* Offset sticky navbar when smooth scrolling to sections */
@@ -105,6 +108,8 @@ body {
   color: var(--text-main);
   line-height: 1.6;
   overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
@@ -114,6 +119,15 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1.25rem;
+}
+
+/* Responsive Table Wrapper for swipeable data tables */
+.table-responsive {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 1rem;
 }
 
 /* Typography */
@@ -583,12 +597,15 @@ body.dark-mode .badge-danger, body.dark-mode .badge-unreachable { background: rg
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.25rem 0.65rem;
+  padding: 0.28rem 0.65rem;
   border-radius: var(--radius-sm);
   font-size: 0.76rem;
   font-weight: 600;
-  line-height: 1.35;
+  line-height: 1.4;
   margin-top: 0.35rem;
+  white-space: normal;
+  word-break: break-word;
+  max-width: 100%;
   transition: all 0.2s ease;
 }
 
@@ -2804,8 +2821,12 @@ body.dark-mode .icon-circle-indigo {
 }
 
 /* ==========================================================
-   RESPONSIVENESS (MOBILE OPTIMIZED)
+   RESPONSIVENESS (MOBILE, TABLET & DESKTOP OPTIMIZED)
    ========================================================== */
+.mobile-bottom-dock {
+  display: none;
+}
+
 @media (max-width: 1200px) {
   .header-container {
     padding: 0 1.25rem;
@@ -2818,12 +2839,63 @@ body.dark-mode .icon-circle-indigo {
 }
 
 @media (max-width: 992px) {
+  body:not(.admin-body) {
+    padding-bottom: 76px !important; /* Reserve height for mobile bottom dock */
+  }
   .header-container {
     padding: 0 1rem;
     justify-content: space-between;
   }
   .desktop-nav {
     display: none;
+  }
+  .mobile-bottom-dock {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    z-index: 9999;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 0.5rem;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.5);
+  }
+  .mobile-dock-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    padding: 0.35rem 0.5rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    flex: 1;
+    text-align: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mobile-dock-btn .dock-icon {
+    font-size: 1.25rem;
+    margin-bottom: 2px;
+    transition: transform 0.2s ease;
+  }
+  .mobile-dock-btn.active, .mobile-dock-btn:hover {
+    color: #38bdf8;
+  }
+  .mobile-dock-btn.active .dock-icon {
+    transform: translateY(-2px);
   }
   .hero-grid {
     grid-template-columns: 1fr;
@@ -2851,14 +2923,333 @@ body.dark-mode .icon-circle-indigo {
 }
 
 @media (max-width: 640px) {
-  .desktop-nav {
-    display: none;
+  /* Prevent iOS automatic screen zoom on input click */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+  .container {
+    padding: 0 0.85rem;
+    width: 100%;
+    max-width: 100%;
+  }
+  .top-bar-inner {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.35rem;
+  }
+  .top-info {
+    justify-content: center;
+    font-size: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+  .top-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .festive-content {
+    gap: 0.45rem;
+    padding: 0 0.35rem;
+  }
+  .festive-tag {
+    font-size: 0.68rem;
+    padding: 0.22rem 0.65rem;
+  }
+  .festive-text {
+    font-size: 0.78rem;
+  }
+  .festive-cta {
+    font-size: 0.72rem;
+    padding: 0.2rem 0.65rem;
+  }
+  .header-container {
+    padding: 0 0.75rem;
+    gap: 0.5rem;
+  }
+  .brand-logo {
+    gap: 0.5rem;
+  }
+  .logo-icon {
+    width: 38px;
+    height: 38px;
+  }
+  .logo-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+  .brand-title {
+    font-size: 1.25rem;
+  }
+  .brand-subtitle {
+    font-size: 0.68rem;
+  }
+  .header-cta-group {
+    gap: 0.45rem;
+  }
+  .header-cta-group .btn {
+    padding: 0.5rem 0.85rem;
+    font-size: 0.82rem;
+  }
+  .header-cta-group .btn-whatsapp span {
+    display: none; /* Icon only on mobile to save space */
+  }
+  .hero-section {
+    padding: 2rem 0 1.75rem;
+  }
+  .badge-pill {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.7rem;
+    margin-bottom: 0.85rem;
   }
   .hero-headline {
-    font-size: 2.1rem;
+    font-size: 1.75rem;
+    line-height: 1.2;
+    margin-bottom: 0.85rem;
+  }
+  .hero-desc {
+    font-size: 0.88rem;
+    margin-bottom: 1.35rem;
+  }
+  .hero-track-card {
+    padding: 1rem 0.85rem;
+    border-radius: 16px;
+    margin-bottom: 1.35rem;
+  }
+  .input-with-button {
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+  .input-with-button input {
+    width: 100% !important;
+    padding: 0.8rem 1rem;
+    font-size: 0.95rem;
+    border-radius: 12px;
+  }
+  .input-with-button .btn {
+    width: 100% !important;
+    padding: 0.8rem 1rem;
+    font-size: 0.95rem;
+    border-radius: 12px;
+  }
+  .sample-ids {
+    margin-top: 0.75rem;
+    font-size: 0.76rem;
+    gap: 0.4rem;
+  }
+  .chip-btn {
+    padding: 0.28rem 0.65rem;
+    font-size: 0.75rem;
+  }
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-top: 1rem;
+    width: 100%;
+  }
+  .stat-divider {
+    display: none;
+  }
+  .stat-item {
+    align-items: center;
+    text-align: center;
+  }
+  .stat-number {
+    font-size: 1.4rem;
+  }
+  .stat-label {
+    font-size: 0.7rem;
+    text-align: center;
+  }
+  .floating-badge {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.74rem;
+    border-radius: 12px;
+  }
+  .floating-badge strong {
+    font-size: 0.82rem;
+  }
+  .floating-badge span {
+    font-size: 0.7rem;
+  }
+  .badge-top-right {
+    top: 0.65rem;
+    right: 0.65rem;
+  }
+  .badge-bottom-left {
+    bottom: 0.65rem;
+    left: 0.65rem;
   }
   .action-dock {
     grid-template-columns: 1fr;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 16px;
+  }
+  .dock-card {
+    padding: 0.85rem 0.75rem;
+    gap: 0.75rem;
+    border-radius: 12px;
+  }
+  .dock-icon-box {
+    width: 44px;
+    height: 44px;
+    font-size: 1.35rem;
+  }
+  .dock-text h3 {
+    font-size: 0.98rem;
+  }
+  .dock-text p {
+    font-size: 0.75rem;
+  }
+  .container-scroll-wrapper {
+    perspective: none;
+    padding: 0.5rem 0 1.5rem;
+  }
+  .container-scroll-title {
+    margin-bottom: 1.25rem;
+  }
+  .container-scroll-heading {
+    font-size: 1.45rem;
+  }
+  .container-scroll-sub {
+    font-size: 0.82rem;
+  }
+  .container-scroll-card {
+    border-width: 3px;
+    border-radius: 18px;
+    padding: 0.4rem;
+    transform: none !important;
+    animation: none !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  }
+  .container-scroll-screen-header {
+    padding: 0.5rem 0.75rem;
+    border-radius: 14px 14px 0 0;
+  }
+  .screen-title-tab {
+    font-size: 0.72rem;
+  }
+  .container-scroll-inner {
+    padding: 0.85rem 0.7rem;
+    border-radius: 0 0 14px 14px;
+  }
+  .tracking-header-card {
+    padding: 1.15rem 0.85rem;
+    border-radius: 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .tid-label {
+    font-size: 0.7rem;
+  }
+  .tid-value {
+    font-size: 1.55rem;
+    word-break: break-all;
+  }
+  .tracking-route {
+    font-size: 0.85rem;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .flowchart-container {
+    margin: 1.25rem 0;
+    padding: 1rem 0.75rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    justify-content: flex-start;
+    gap: 1rem;
+    border-radius: 14px;
+  }
+  .flowchart-beam-track {
+    top: 33px;
+    left: 24px;
+    right: 24px;
+    min-width: 300px;
+  }
+  .flow-node {
+    flex: 0 0 auto;
+    min-width: 72px;
+  }
+  .flow-circle {
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+  }
+  .flow-node-title {
+    font-size: 0.72rem;
+    margin-top: 0.5rem;
+    white-space: nowrap;
+  }
+  .timeline-card {
+    padding: 1rem 0.75rem;
+    border-radius: 14px;
+  }
+  .timeline-list {
+    padding-left: 1.35rem;
+  }
+  .timeline-list::before {
+    left: 6px;
+  }
+  .timeline-dot {
+    left: -1.35rem;
+    width: 14px;
+    height: 14px;
+  }
+  .timeline-content {
+    padding: 0.75rem 0.85rem;
+    border-radius: 10px;
+  }
+  .timeline-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+  }
+  .timeline-status {
+    font-size: 0.88rem;
+  }
+  .timeline-time {
+    font-size: 0.72rem;
+  }
+  .timeline-hub {
+    font-size: 0.78rem;
+  }
+  .timeline-remarks {
+    font-size: 0.78rem;
+  }
+  .booking-layout {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  .booking-form-card {
+    padding: 1.15rem 0.85rem;
+    border-radius: 16px;
+  }
+  .booking-step-block {
+    padding-left: 2.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .booking-step-block::before {
+    left: 14px;
+    top: 32px;
+    bottom: -20px;
+  }
+  .step-num-indicator {
+    width: 30px;
+    height: 30px;
+    font-size: 0.85rem;
+  }
+  .form-section-title {
+    margin-bottom: 0.85rem;
+    gap: 0.5rem;
+  }
+  .form-section-title h3 {
+    font-size: 1.05rem;
+  }
+  .form-section-title p {
+    font-size: 0.76rem;
   }
   .form-grid-2,
   .form-grid-3,
@@ -2867,24 +3258,209 @@ body.dark-mode .icon-circle-indigo {
   .payment-method-selector {
     grid-template-columns: 1fr;
   }
+  .form-group {
+    margin-bottom: 0.75rem;
+    gap: 0.3rem;
+  }
+  .form-group label {
+    font-size: 0.8rem;
+  }
+  .input-with-icon input,
+  .input-with-icon select {
+    padding-left: 2.35rem !important;
+    padding-right: 0.65rem !important;
+    padding-top: 0.7rem;
+    padding-bottom: 0.7rem;
+    font-size: 0.9rem;
+    border-radius: 10px;
+  }
+  .input-with-icon .field-icon {
+    left: 0.75rem;
+    font-size: 0.95rem;
+  }
+  .input-with-icon.icon-textarea-wrapper textarea {
+    padding-left: 2.35rem !important;
+    padding-right: 0.65rem !important;
+    font-size: 0.9rem;
+    border-radius: 10px;
+  }
+  .payment-method-selector {
+    gap: 0.65rem;
+    margin-bottom: 1.25rem;
+  }
+  .payment-card-box {
+    padding: 0.85rem 0.75rem;
+    gap: 0.65rem;
+    border-radius: 12px;
+  }
+  .pay-icon {
+    font-size: 1.4rem;
+  }
+  .payment-card-box strong {
+    font-size: 0.88rem;
+  }
+  .payment-card-box span {
+    font-size: 0.74rem;
+  }
+  .elevated-sticky-card {
+    padding: 1.15rem 0.85rem;
+    border-radius: 16px;
+  }
+  .summary-header h3 {
+    font-size: 1.1rem;
+  }
+  .spec-row,
+  .price-row {
+    font-size: 0.82rem;
+  }
+  .total-highlight-box {
+    padding: 0.85rem;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    border-radius: 12px;
+  }
+  .total-main-title {
+    font-size: 0.85rem;
+  }
+  .final-price {
+    font-size: 1.5rem;
+  }
+  .guarantee-box {
+    margin-top: 1rem;
+    padding: 0.75rem;
+  }
+  .guar-item {
+    font-size: 0.74rem;
+  }
+  .card {
+    padding: 1.15rem 0.85rem;
+    border-radius: 16px;
+  }
+  .calc-container {
+    max-width: 100%;
+  }
+  .calc-inputs-grid {
+    gap: 1rem;
+  }
+  .calc-output-card {
+    padding: 1.15rem 0.85rem;
+    border-radius: 14px;
+  }
+  .calc-price-display {
+    font-size: 1.85rem;
+  }
+  .volumetric-box {
+    padding: 0.85rem 0.75rem;
+    margin: 1rem 0;
+    border-radius: 12px;
+  }
+  .volumetric-box h4 {
+    font-size: 0.88rem;
+    margin-bottom: 0.75rem;
+  }
+  .breakdown-row {
+    font-size: 0.82rem;
+  }
+  .pincode-card {
+    padding: 1.15rem 0.85rem;
+    border-radius: 16px;
+  }
+  .quick-pins {
+    gap: 0.35rem;
+    margin-top: 0.75rem;
+    font-size: 0.76rem;
+  }
+  .pincode-result-container {
+    margin-top: 1.25rem;
+    padding: 1rem 0.85rem;
+    border-radius: 14px;
+  }
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .data-table th,
+  .data-table td {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.82rem;
+  }
   .steps-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .how-it-works-section {
+    padding: 2.5rem 0;
+  }
+  .section-heading {
+    margin-bottom: 1.5rem;
+  }
+  .section-heading h2 {
+    font-size: 1.65rem;
+  }
+  .section-heading p {
+    font-size: 0.85rem;
+  }
+  .bento-step-card {
+    padding: 1.65rem 1rem 1.25rem;
+    border-radius: 16px;
+  }
+  .step-icon-circle {
+    width: 52px;
+    height: 52px;
+    margin-bottom: 0.85rem;
+  }
+  .bento-step-card h3 {
+    font-size: 1.05rem;
+  }
+  .bento-step-card p {
+    font-size: 0.8rem;
+  }
+  .urgent-dispatch-banner {
+    padding: 2rem 0;
   }
   .urgent-left {
     flex-direction: column;
     text-align: center;
+    gap: 1rem;
+  }
+  .urgent-phone-badge {
+    width: 52px;
+    height: 52px;
+  }
+  .urgent-phone-icon {
+    font-size: 1.45rem;
+  }
+  .urgent-text h3 {
+    font-size: 1.25rem;
+  }
+  .urgent-text p {
+    font-size: 0.82rem;
   }
   .urgent-cta-actions {
     width: 100%;
     justify-content: center;
+    flex-direction: column;
+    gap: 0.65rem;
   }
   .btn-urgent-call,
   .btn-urgent-wa {
     width: 100%;
     justify-content: center;
+    padding: 0.75rem 1.2rem;
+    font-size: 0.92rem;
   }
   .footer-grid {
     grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .main-footer {
+    padding: 2.5rem 0 1rem;
+  }
+  .footer-bottom-inner {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
   }
   .stepper-container {
     flex-direction: column;
@@ -2892,6 +3468,282 @@ body.dark-mode .icon-circle-indigo {
   }
   .stepper-progress-bg {
     display: none;
+  }
+  /* Modals on mobile */
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+  .modal-card {
+    max-width: 96vw;
+    width: 96vw;
+    padding: 1.15rem 0.85rem;
+    margin: 0.5rem auto;
+    border-radius: 16px;
+  }
+  .receipt-brand h2 {
+    font-size: 1.15rem;
+  }
+  .receipt-tracking-banner {
+    padding: 0.85rem;
+    margin-bottom: 1.15rem;
+  }
+  .tracking-number {
+    font-size: 1.65rem;
+    word-break: break-all;
+  }
+  .receipt-details-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    padding: 0.85rem;
+    margin-bottom: 1.15rem;
+  }
+  .receipt-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 1.15rem;
+  }
+  .sncs-toast-container {
+    bottom: 74px !important;
+    left: 0.5rem !important;
+    right: 0.5rem !important;
+    align-items: center;
+  }
+  .sncs-toast {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0.65rem 0.85rem !important;
+    font-size: 0.82rem !important;
+    border-radius: 10px;
+  }
+  .transit-overbridge-card {
+    padding: 1rem 0.75rem;
+    margin: 1.25rem 0;
+    border-radius: 16px;
+  }
+  .overbridge-header {
+    gap: 0.6rem;
+    margin-bottom: 0.85rem;
+  }
+  .overbridge-title strong {
+    font-size: 0.92rem;
+  }
+  .bridge-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1.35rem;
+  }
+  .overbridge-stage {
+    height: 125px;
+  }
+  .sncs-express-truck {
+    width: 105px;
+    height: 42px;
+  }
+  .milestone-post {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+    bottom: 34px;
+  }
+  .brake-zone-post {
+    left: 50%;
+  }
+  .bridge-roadway {
+    height: 32px;
+  }
+}
+
+/* ==========================================================
+   SMARTPHONES (<= 480px) - ZERO CLIPPING OPTIMIZATIONS
+   ========================================================== */
+@media (max-width: 480px) {
+  .container {
+    padding: 0 0.65rem;
+  }
+  .header-container {
+    padding: 0 0.5rem;
+    gap: 0.35rem;
+  }
+  .brand-logo {
+    gap: 0.4rem;
+  }
+  .logo-icon {
+    width: 34px;
+    height: 34px;
+  }
+  .brand-title {
+    font-size: 1.15rem;
+  }
+  .brand-subtitle {
+    display: none; /* Hide long subtitle to prevent header push */
+  }
+  .header-cta-group {
+    gap: 0.35rem;
+  }
+  .header-cta-group .btn {
+    padding: 0.45rem 0.65rem;
+    font-size: 0.78rem;
+    gap: 0.3rem;
+  }
+  .hero-headline {
+    font-size: 1.6rem;
+  }
+  .booking-step-block {
+    padding-left: 2.4rem;
+  }
+  .booking-step-block::before {
+    left: 12px;
+  }
+  .step-num-indicator {
+    width: 26px;
+    height: 26px;
+    font-size: 0.78rem;
+  }
+  .total-highlight-box {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+  .receipt-details-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  .tracking-number {
+    font-size: 1.55rem;
+  }
+  .floating-badge {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.7rem;
+  }
+  .floating-badge strong {
+    font-size: 0.78rem;
+  }
+  .badge-icon {
+    font-size: 1rem;
+  }
+  .sample-ids {
+    font-size: 0.75rem;
+    gap: 0.35rem;
+  }
+  .chip-btn {
+    padding: 0.25rem 0.55rem;
+    font-size: 0.72rem;
+  }
+  .mobile-bottom-dock {
+    height: 60px;
+    padding: 0 0.35rem;
+  }
+  .mobile-dock-btn {
+    font-size: 0.68rem;
+    padding: 0.3rem 0.35rem;
+  }
+  .mobile-dock-btn .dock-icon {
+    font-size: 1.15rem;
+  }
+}
+
+/* ==========================================================
+   COMPACT & LOW-DIMENSION PHONES (<= 360px)
+   iPhone SE (1st gen 320px), Galaxy S8/S9 (360px), Small Androids
+   ========================================================== */
+@media (max-width: 360px) {
+  .container {
+    padding: 0 0.45rem;
+  }
+  .header-container {
+    padding: 0 0.35rem;
+    gap: 0.25rem;
+  }
+  .logo-icon {
+    width: 30px;
+    height: 30px;
+  }
+  .brand-title {
+    font-size: 1.05rem;
+  }
+  .header-cta-group .btn-primary {
+    padding: 0.38rem 0.55rem;
+    font-size: 0.74rem;
+  }
+  .header-cta-group .btn-whatsapp {
+    padding: 0.38rem 0.55rem;
+  }
+  .hero-headline {
+    font-size: 1.45rem;
+  }
+  .stat-number {
+    font-size: 1.22rem;
+  }
+  .stat-label {
+    font-size: 0.65rem;
+  }
+  .mobile-dock-btn {
+    font-size: 0.62rem;
+    padding: 0.25rem 0.15rem;
+  }
+  .mobile-dock-btn .dock-icon {
+    font-size: 1.05rem;
+  }
+  .booking-form-card {
+    padding: 0.85rem 0.55rem;
+  }
+  .booking-step-block {
+    padding-left: 2.1rem;
+  }
+  .booking-step-block::before {
+    left: 10px;
+  }
+  .step-num-indicator {
+    width: 22px;
+    height: 22px;
+    font-size: 0.72rem;
+  }
+  .input-with-icon input,
+  .input-with-icon select,
+  .input-with-icon.icon-textarea-wrapper textarea {
+    padding-left: 2.1rem !important;
+    padding-right: 0.5rem !important;
+    font-size: 0.85rem;
+  }
+  .input-with-icon .field-icon {
+    left: 0.6rem;
+    font-size: 0.85rem;
+  }
+  .tid-value {
+    font-size: 1.28rem;
+  }
+  .tracking-header-card {
+    padding: 0.85rem 0.65rem;
+  }
+  .flow-circle {
+    width: 34px;
+    height: 34px;
+    font-size: 0.9rem;
+  }
+  .calc-price-display {
+    font-size: 1.55rem;
+  }
+  .final-price {
+    font-size: 1.35rem;
+  }
+  .sncs-express-truck {
+    width: 90px;
+    height: 36px;
+  }
+  .overbridge-stage {
+    height: 110px;
+  }
+  .data-table th,
+  .data-table td {
+    padding: 0.45rem 0.55rem;
+    font-size: 0.76rem;
+  }
+  .tracking-number {
+    font-size: 1.35rem;
+  }
+  .modal-card {
+    padding: 0.85rem 0.65rem;
   }
 }
 

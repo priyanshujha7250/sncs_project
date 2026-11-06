@@ -6,8 +6,9 @@ import json
 import time
 import queue
 import threading
+from functools import wraps
 from datetime import datetime, timedelta
-from flask import Flask, request, jsonify, render_template, send_from_directory, Response, session
+from flask import Flask, request, jsonify, render_template, send_from_directory, Response, session, redirect
 from flask_cors import CORS
 from database import get_db_connection, init_db, hash_password
 from pincode_data import lookup_indian_pincode_city
@@ -19,6 +20,11 @@ app = Flask(
     template_folder=os.path.join(BASE_DIR, "templates")
 )
 app.secret_key = "sncs_ranchi_courier_secret_key_834001"
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_PERMANENT=False
+)
 CORS(app)
 
 # Ensure DB is initialized
@@ -506,12 +512,38 @@ def verify_payment():
 
 # --- ADMIN APIS ---
 
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get("admin_logged_in"):
+            return jsonify({
+                "success": False,
+                "message": "Access Denied: Authentication required. Please log in with staff or owner credentials.",
+                "unauthorized": True
+            }), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Check Admin Session Status
+@app.route("/api/admin/check-session", methods=["GET"])
+def admin_check_session():
+    if session.get("admin_logged_in"):
+        return jsonify({
+            "authenticated": True,
+            "username": session.get("admin_user", "admin"),
+            "role": session.get("admin_role", "staff")
+        })
+    return jsonify({"authenticated": False, "message": "Not logged in"}), 401
+
 # Admin Login
 @app.route("/api/admin/login", methods=["POST"])
 def admin_login():
     data = request.get_json() or {}
     username = data.get("username", "").strip()
     password = data.get("password", "").strip()
+
+    if not username or not password:
+        return jsonify({"success": False, "message": "Please enter both username and password."}), 400
 
     conn = get_db_connection()
     user = conn.execute("SELECT * FROM admin_users WHERE username = ?", (username,)).fetchone()
@@ -521,21 +553,54 @@ def admin_login():
         session["admin_logged_in"] = True
         session["admin_user"] = username
         session["admin_role"] = user["role"]
+        session.permanent = False
         return jsonify({
             "success": True,
             "username": username,
             "role": user["role"],
             "message": "Login successful"
         })
-    return jsonify({"success": False, "message": "Invalid username or password"}), 401
+    return jsonify({"success": False, "message": "Invalid username or password. Access denied."}), 401
 
 @app.route("/api/admin/logout", methods=["POST"])
 def admin_logout():
     session.clear()
-    return jsonify({"success": True})
+    res = jsonify({"success": True, "message": "Logged out successfully"})
+    res.delete_cookie(app.config.get("SESSION_COOKIE_NAME", "session"))
+    return res
+
+# Admin Change Password
+@app.route("/api/admin/change-password", methods=["POST"])
+@admin_required
+def admin_change_password():
+    data = request.get_json() or {}
+    current_password = data.get("current_password", "").strip()
+    new_password = data.get("new_password", "").strip()
+
+    if not current_password or not new_password:
+        return jsonify({"success": False, "message": "Both current and new passwords are required."}), 400
+
+    if len(new_password) < 6:
+        return jsonify({"success": False, "message": "New password must be at least 6 characters long."}), 400
+
+    username = session.get("admin_user")
+    conn = get_db_connection()
+    user = conn.execute("SELECT * FROM admin_users WHERE username = ?", (username,)).fetchone()
+
+    if not user or user["password_hash"] != hash_password(current_password):
+        conn.close()
+        return jsonify({"success": False, "message": "Current password is incorrect."}), 400
+
+    new_hash = hash_password(new_password)
+    conn.execute("UPDATE admin_users SET password_hash = ? WHERE username = ?", (new_hash, username))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"success": True, "message": "Password changed successfully! Keep your new password secure."})
 
 # Admin Dashboard Stats
 @app.route("/api/admin/dashboard", methods=["GET"])
+@admin_required
 def admin_dashboard():
     conn = get_db_connection()
     total_bookings = conn.execute("SELECT COUNT(*) FROM bookings").fetchone()[0]
@@ -564,6 +629,7 @@ def admin_dashboard():
 
 # Admin Bookings List
 @app.route("/api/admin/bookings", methods=["GET"])
+@admin_required
 def admin_bookings():
     status_filter = request.args.get("status", "").strip()
     query = request.args.get("q", "").strip()
@@ -590,6 +656,7 @@ def admin_bookings():
 
 # Admin Update Parcel Hub / Status
 @app.route("/api/admin/bookings/<tracking_id>/status", methods=["POST"])
+@admin_required
 def admin_update_status(tracking_id):
     data = request.get_json() or {}
     new_status = data.get("status")
@@ -650,6 +717,7 @@ def admin_update_status(tracking_id):
 
 # Admin Edit Rates
 @app.route("/api/admin/rates/<int:rate_id>", methods=["PUT"])
+@admin_required
 def admin_update_rate(rate_id):
     data = request.get_json() or {}
     first_kg = data.get("first_kg_price")
@@ -669,6 +737,7 @@ def admin_update_rate(rate_id):
 
 # Admin Pincodes Management
 @app.route("/api/admin/pincodes", methods=["GET", "POST"])
+@admin_required
 def admin_pincodes():
     conn = get_db_connection()
     if request.method == "POST":
@@ -694,6 +763,7 @@ def admin_pincodes():
 
 # Admin Offers Management
 @app.route("/api/admin/offers", methods=["GET", "PUT"])
+@admin_required
 def admin_offers():
     conn = get_db_connection()
     if request.method == "PUT":
@@ -718,6 +788,8 @@ def admin_offers():
 # Daily CSV Report Export
 @app.route("/api/admin/export-csv")
 def export_csv():
+    if not session.get("admin_logged_in"):
+        return redirect("/admin")
     conn = get_db_connection()
     rows = conn.execute("""
     SELECT tracking_id, sender_name, sender_mobile, sender_city,
@@ -788,6 +860,9 @@ def stream_track_events(tracking_id):
 # 2. Real-time stream for Admin Dashboard (Bookings & Status updates)
 @app.route("/api/stream/admin")
 def stream_admin_events():
+    if not session.get("admin_logged_in"):
+        return jsonify({"error": "Unauthorized"}), 401
+
     def event_stream():
         q = event_bus.subscribe("admin")
         yield f"event: connected\ndata: {json.dumps({'channel': 'admin', 'status': 'connected', 'server_time': datetime.now().isoformat()})}\n\n"
@@ -816,6 +891,7 @@ def stream_admin_events():
 
 # 3. Live Transit Simulator (Automated Real-time Demo Runner)
 @app.route("/api/admin/simulate-transit", methods=["POST"])
+@admin_required
 def simulate_transit():
     data = request.get_json() or {}
     tracking_id = data.get("tracking_id", "SNCS1024").strip().upper()
@@ -888,6 +964,7 @@ def simulate_transit():
     })
 
 @app.route("/api/admin/simulation-status", methods=["GET"])
+@admin_required
 def simulation_status():
     return jsonify({
         "active_simulations": list(active_simulations.keys())

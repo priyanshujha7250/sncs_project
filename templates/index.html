@@ -12,29 +12,41 @@
 </head>
 <body>
 
-  <!-- Festive Banner -->
-  <aside id="festive-banner" class="festive-banner" aria-label="Special Offers">
-    <div class="container festive-content">
-      <span class="festive-tag">SPECIAL OFFER</span>
-      <p id="festive-text" class="festive-text">🎉 Flat ₹50 OFF on your first booking! Doorstep pickup available across Ranchi.</p>
-      <button class="festive-cta" onclick="handleBookNowClick(event)">Claim Discount →</button>
-    </div>
-  </aside>
-
-  <!-- Top Announcement Bar -->
-  <div class="top-bar">
-    <div class="header-container top-bar-inner">
-      <div class="top-info">
-        <span>📍 Gandhi Market, Near Basera Hotel Overbridge, Ranchi 834001</span>
-        <span class="divider">|</span>
-        <span>⏰ 9:00 AM - 10:00 PM (Daily)</span>
+  <!-- Unified Top Announcement Header Block -->
+  <div class="top-header-block" id="top-header-block">
+    <!-- 1. Compact Slim Offer Bar (32-36px height) -->
+    <aside id="festive-banner" class="festive-banner" aria-label="Special Offer Announcement">
+      <div class="container festive-content">
+        <div class="offer-message-wrap">
+          <span class="offer-gift-icon" aria-hidden="true">🎁</span>
+          <span id="festive-prefix" class="festive-prefix" data-i18n="offer_prefix">First booking par ₹50 OFF · Code:</span>
+          <button type="button" class="promo-chip" id="banner-promo-chip" onclick="copyBannerPromoCode(event)" title="Click to copy promo code" aria-label="Copy promo code FIRST50">
+            <span class="code-text" id="banner-promo-code">FIRST50</span>
+            <span class="copy-icon" aria-hidden="true">📋</span>
+            <span class="copy-tooltip" id="banner-copy-tooltip">Copied!</span>
+          </button>
+        </div>
+        <button type="button" class="festive-cta-ghost" onclick="claimOfferDiscount(event)" aria-label="Claim ₹50 discount on booking">
+          <span data-i18n="offer_claim">Claim Discount →</span>
+        </button>
+        <button type="button" class="festive-close-btn" onclick="closeOfferBanner()" title="Dismiss announcement" aria-label="Close offer bar">✕</button>
       </div>
-      <div class="top-actions">
-        <a href="tel:7479814001" class="top-phone">📞 7479814001</a>
-        <a href="tel:6291414573" class="top-phone">📞 6291414573</a>
-        <button id="lang-toggle-btn" class="lang-btn" onclick="toggleLanguage()">🌐 हिंदी / ENG</button>
-        <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()">☀️ Light</button>
-        <a href="/admin" class="staff-login-link" target="_blank">🔑 Staff / Admin</a>
+    </aside>
+
+    <!-- 2. Address, Hours & Actions Bar -->
+    <div class="top-bar">
+      <div class="header-container top-bar-inner">
+        <div class="top-info">
+          <span>📍 Gandhi Market, Near Basera Hotel Overbridge, Ranchi 834001</span>
+          <span class="divider">|</span>
+          <span>⏰ 9:00 AM - 10:00 PM (Daily)</span>
+        </div>
+        <div class="top-actions">
+          <a href="tel:7479814001" class="top-phone" aria-label="Call Ranchi Phone 1">📞 7479814001</a>
+          <a href="tel:6291414573" class="top-phone" aria-label="Call Ranchi Phone 2">📞 6291414573</a>
+          <button id="lang-toggle-btn" class="lang-btn" onclick="toggleLanguage()" aria-label="Toggle language English or Hindi">🌐 हिंदी / ENG</button>
+          <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle Light or Dark theme">☀️ Light</button>
+        </div>
       </div>
     </div>
   </div>
@@ -136,9 +148,12 @@
             <span class="stat-label">Ranchi Same-Day</span>
           </div>
           <div class="stat-divider"></div>
-          <div class="stat-item">
+          <div class="stat-item stat-item-clickable" id="hero-stat-offer" onclick="navigateToBookWithPromo('FIRST50')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToBookWithPromo('FIRST50');}" role="button" tabindex="0" title="Click to claim ₹50 welcome discount with code FIRST50" aria-label="Claim ₹50 OFF first booking welcome discount with code FIRST50">
             <span class="stat-icon">🏷️</span>
-            <span class="stat-number">₹50 OFF</span>
+            <div class="stat-number-wrap">
+              <span class="stat-number">₹50 OFF</span>
+              <span class="stat-claim-badge">Claim →</span>
+            </div>
             <span class="stat-label">1st User Welcome</span>
           </div>
         </div>
@@ -444,6 +459,24 @@
                   </div>
                 </div>
 
+                <!-- Promo Code Box -->
+                <div class="booking-promo-box">
+                  <div class="promo-box-title">
+                    <span>🏷️</span>
+                    <label for="booking_promo_code">Have a Coupon / Promo Code?</label>
+                  </div>
+                  <div class="promo-input-row">
+                    <div class="input-with-icon promo-field-wrap">
+                      <span class="field-icon">🎟️</span>
+                      <input type="text" id="booking_promo_code" placeholder="Enter coupon (e.g. FIRST50)" autocomplete="off" autocapitalize="characters" onkeydown="if(event.key==='Enter'){event.preventDefault();applyBookingPromoCode();}">
+                    </div>
+                    <button type="button" id="promo-apply-btn" class="btn btn-secondary promo-apply-btn" onclick="applyBookingPromoCode()">
+                      <span>Apply</span>
+                    </button>
+                  </div>
+                  <div id="promo-alert-box" class="promo-alert hidden"></div>
+                </div>
+
                 <div class="payment-method-selector">
                   <label class="payment-option">
                     <input type="radio" name="payment_mode" value="Online (UPI/Razorpay)" checked>
@@ -518,7 +551,7 @@
                   <span id="sum-base-price">₹40.00</span>
                 </div>
                 <div class="price-row discount-row" id="sum-discount-row">
-                  <span>First Booking Offer:</span>
+                  <span id="sum-discount-label">First Booking Offer:</span>
                   <span class="discount-val" id="sum-discount-val">- ₹50.00</span>
                 </div>
                 <div class="total-highlight-box">
@@ -898,7 +931,6 @@
           <li><a href="javascript:switchTab('book')"><span>→</span> Book Consignment</a></li>
           <li><a href="javascript:switchTab('price')"><span>→</span> Rates & Price Calculator</a></li>
           <li><a href="javascript:switchTab('pincode')"><span>→</span> Pin Code Directory</a></li>
-          <li><a href="/admin"><span>→</span> Staff Admin Panel</a></li>
         </ul>
       </div>
 
@@ -924,7 +956,11 @@
     <div class="footer-bottom">
       <div class="container footer-bottom-inner">
         <p>© 2026 Shri Network Courier Services (SNCS). Ranchi, Jharkhand. All rights reserved.</p>
-        <p>Ranchi Hub: Gandhi Market Overbridge Facility</p>
+        <div class="footer-bottom-links">
+          <span>Ranchi Hub: Gandhi Market Overbridge Facility</span>
+          <span class="footer-separator" aria-hidden="true">•</span>
+          <a href="/admin" class="footer-admin-link" aria-label="Staff and Admin Portal">Staff / Admin</a>
+        </div>
       </div>
     </div>
   </footer>

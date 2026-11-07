@@ -127,12 +127,25 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
         text TEXT NOT NULL,
+        hindi_text TEXT,
+        code TEXT DEFAULT 'FIRST50',
         discount_amount REAL DEFAULT 50.0,
         start_date TEXT,
         end_date TEXT,
         is_active INTEGER DEFAULT 1
     );
     """)
+
+    # Safe migration for existing installations
+    for migration_sql in [
+        "ALTER TABLE offers ADD COLUMN code TEXT DEFAULT 'FIRST50'",
+        "ALTER TABLE offers ADD COLUMN hindi_text TEXT DEFAULT 'पहली बुकिंग पर ₹50 की छूट · कोड: FIRST50'",
+        "ALTER TABLE bookings ADD COLUMN promo_code TEXT"
+    ]:
+        try:
+            cursor.execute(migration_sql)
+        except Exception:
+            pass
 
     # 7. Admin Users Table
     cursor.execute("""
@@ -224,16 +237,28 @@ def seed_initial_data(conn):
         today = datetime.now().strftime("%Y-%m-%d")
         next_month = (datetime.now() + timedelta(days=60)).strftime("%Y-%m-%d")
         cursor.execute("""
-        INSERT INTO offers (title, text, discount_amount, start_date, end_date, is_active)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO offers (title, text, hindi_text, code, discount_amount, start_date, end_date, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, (
-            'Festive Dhamaka Offer 🎁',
-            'Flat ₹50 OFF on your First Parcel Booking! Use code FIRST50 or book online with any new mobile number.',
+            'Welcome Offer 🎁',
+            'First booking par ₹50 OFF · Code: FIRST50',
+            'पहली बुकिंग पर ₹50 की छूट · कोड: FIRST50',
+            'FIRST50',
             50.0,
             today,
             next_month,
             1
         ))
+    else:
+        # Update existing offer to the new clean default text & code if needed
+        cursor.execute("""
+        UPDATE offers
+        SET text = COALESCE(NULLIF(text, ''), 'First booking par ₹50 OFF · Code: FIRST50'),
+            hindi_text = COALESCE(NULLIF(hindi_text, ''), 'पहली बुकिंग पर ₹50 की छूट · कोड: FIRST50'),
+            code = COALESCE(NULLIF(code, ''), 'FIRST50'),
+            discount_amount = 50.0
+        WHERE id = 1
+        """)
 
     # Seed Initial Customers and Sample Bookings with Realistic Timelines
     cursor.execute("SELECT COUNT(*) FROM bookings")

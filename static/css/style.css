@@ -163,95 +163,224 @@ a {
 }
 
 /* ==========================================================
-   FESTIVE BANNER & TOP BAR
+   UNIFIED TOP HEADER BLOCK (OFFER BAR & INFO BAR)
    ========================================================== */
-.festive-banner {
-  background: linear-gradient(90deg, #09132b 0%, #17336e 50%, #09132b 100%);
-  color: #ffffff;
-  padding: 0.58rem 0;
-  font-size: 0.88rem;
-  border-bottom: 1px solid rgba(59, 130, 246, 0.28);
+.top-header-block {
+  background: #0b1329;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   position: relative;
-  z-index: 50;
-  box-shadow: 0 4px 14px rgba(9, 19, 43, 0.35);
-  animation: bannerSlideDown 0.4s ease-out;
+  z-index: 101;
+  transition: background-color 0.3s ease;
 }
 
-@keyframes bannerSlideDown {
-  from { transform: translateY(-100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+body.dark-mode .top-header-block {
+  background: #060b18;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* 1. Compact Slim Offer Bar (32-36px height) */
+.festive-banner {
+  background: rgba(37, 99, 235, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  color: #ffffff;
+  min-height: 34px;
+  padding: 0.32rem 0;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  position: relative;
+  transition: all 0.25s ease;
+}
+
+body.dark-mode .festive-banner {
+  background: rgba(30, 58, 138, 0.2);
+  border-bottom-color: rgba(255, 255, 255, 0.05);
 }
 
 .festive-content {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  gap: 0.85rem;
   flex-wrap: wrap;
   text-align: center;
+  position: relative;
+  padding: 0 2.2rem 0 1rem;
 }
 
-@keyframes festivePillPulse {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 0 0 8px rgba(255, 158, 0, 0.5), 0 0 18px rgba(255, 158, 0, 0.3);
-  }
-  50% {
-    transform: scale(1.05);
-    box-shadow: 0 0 18px rgba(255, 158, 0, 0.95), 0 0 30px rgba(255, 122, 0, 0.6);
-  }
-}
-
-.festive-tag {
-  background: linear-gradient(135deg, #ffb703 0%, #fb8500 100%);
-  color: #08101e;
-  font-size: 0.72rem;
-  font-weight: 900;
-  padding: 0.28rem 0.85rem;
-  border-radius: var(--radius-full);
-  letter-spacing: 0.08em;
-  box-shadow: 0 0 12px rgba(255, 158, 0, 0.6);
+.offer-message-wrap {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  animation: festivePillPulse 2s ease-in-out infinite;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
-  user-select: none;
+  gap: 0.45rem;
+  color: #f1f5f9;
+  font-weight: 500;
+  font-size: 0.84rem;
 }
 
-.festive-text {
+.offer-gift-icon {
+  font-size: 0.95rem;
+  display: inline-block;
+  animation: giftBounce 2.5s ease-in-out infinite;
+}
+
+@keyframes giftBounce {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  15% { transform: scale(1.15) rotate(-6deg); }
+  30% { transform: scale(1.15) rotate(6deg); }
+  45% { transform: scale(1) rotate(0deg); }
+}
+
+.festive-prefix {
+  color: #f8fafc;
   font-weight: 600;
-  color: #ffffff !important;
   letter-spacing: 0.01em;
 }
 
-.festive-cta {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.45);
+/* Clickable Promo Code Chip */
+.promo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(254, 240, 138, 0.14);
+  border: 1px dashed #fde047;
+  color: #fef08a;
+  padding: 0.15rem 0.55rem;
+  border-radius: 6px;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  user-select: all;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.promo-chip:hover {
+  background: rgba(254, 240, 138, 0.25);
+  border-color: #ffffff;
   color: #ffffff;
-  padding: 0.25rem 0.9rem;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(254, 240, 138, 0.25);
+}
+
+.promo-chip:active {
+  transform: scale(0.96);
+}
+
+.promo-chip .copy-icon {
+  font-size: 0.75rem;
+  opacity: 0.85;
+  transition: transform 0.2s ease;
+}
+
+.promo-chip:hover .copy-icon {
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+.copy-tooltip {
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: #10b981;
+  color: #ffffff;
+  padding: 0.12rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  font-family: var(--font-body);
+}
+
+.copy-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: #10b981;
+}
+
+.promo-chip.copied .copy-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.promo-chip.copied {
+  border-color: #34d399;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.2);
+}
+
+/* Ghost / Outline Claim Button */
+.festive-cta-ghost {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  padding: 0.18rem 0.65rem;
   border-radius: var(--radius-full);
   cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: 700;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  font-size: 0.78rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.festive-cta:hover {
-  background: #ffffff;
-  color: #1e3a8a;
-  transform: translateY(-1px) scale(1.03);
-  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.25);
+.festive-cta-ghost:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #ffffff;
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 
+.festive-cta-ghost:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Close Banner Button */
+.festive-close-btn {
+  position: absolute;
+  right: 0.65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  font-size: 0.92rem;
+  line-height: 1;
+  padding: 0.25rem 0.4rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.festive-close-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* 2. Top Info Bar */
 .top-bar {
-  background: #0f172a;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 0.5rem 0;
-  font-size: 0.82rem;
+  background: transparent;
+  padding: 0.42rem 0;
+  font-size: 0.8rem;
   color: #94a3b8;
+  border-bottom: none;
 }
 
 .top-bar-inner {
@@ -907,6 +1036,57 @@ body.dark-mode .stat-number {
   width: 1px;
   height: 48px;
   background: var(--border-light);
+}
+
+/* Hero Clickable Offer Stat */
+.stat-item-clickable {
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 12px;
+  padding: 0.35rem 0.6rem;
+  margin: -0.35rem -0.6rem;
+}
+
+.stat-item-clickable:hover {
+  transform: translateY(-3px);
+  background: rgba(37, 99, 235, 0.06);
+}
+
+body.dark-mode .stat-item-clickable:hover {
+  background: rgba(37, 99, 235, 0.15);
+}
+
+.stat-item-clickable:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 3px;
+}
+
+.stat-number-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.stat-claim-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #ea580c;
+  background: rgba(234, 88, 12, 0.12);
+  border: 1px solid rgba(234, 88, 12, 0.25);
+  padding: 0.12rem 0.45rem;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+  display: inline-block;
+  line-height: 1.3;
+}
+
+.stat-item-clickable:hover .stat-claim-badge {
+  background: #ea580c;
+  color: #ffffff;
+  transform: translateX(2px);
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.3);
 }
 
 .hero-image-col {
@@ -1897,6 +2077,105 @@ body.dark-mode .input-with-icon textarea {
   font-weight: 500;
 }
 
+/* Booking Promo Code Box */
+.booking-promo-box {
+  background: var(--bg-card-subtle);
+  border: 1.5px dashed var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.25s ease;
+}
+
+.booking-promo-box:focus-within {
+  border-color: #2563eb;
+  border-style: solid;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.promo-box-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.65rem;
+}
+
+.promo-box-title label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 0;
+  cursor: pointer;
+}
+
+.promo-input-row {
+  display: flex;
+  gap: 0.65rem;
+  align-items: stretch;
+}
+
+.promo-field-wrap {
+  flex: 1;
+}
+
+.promo-field-wrap input {
+  text-transform: uppercase;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.promo-apply-btn {
+  padding: 0 1.25rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.promo-alert {
+  margin-top: 0.65rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.promo-alert.alert-success {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #059669;
+}
+
+body.dark-mode .promo-alert.alert-success {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.promo-alert.alert-error {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #dc2626;
+}
+
+body.dark-mode .promo-alert.alert-error {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.promo-remove-link {
+  color: #ef4444;
+  font-size: 0.75rem;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-left: auto;
+  font-weight: 600;
+}
+
 /* Payment Method Selector */
 .payment-method-selector {
   display: grid;
@@ -2820,6 +3099,40 @@ body.dark-mode .icon-circle-indigo {
   gap: 0.75rem;
 }
 
+.footer-bottom-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.footer-separator {
+  color: #475569;
+  font-size: 0.75rem;
+  user-select: none;
+}
+
+.footer-admin-link {
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 0.12rem 0.45rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  letter-spacing: 0.01em;
+}
+
+.footer-admin-link:hover {
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.footer-admin-link:focus-visible {
+  outline: 1.5px solid #3b82f6;
+  outline-offset: 2px;
+}
+
 /* ==========================================================
    RESPONSIVENESS (MOBILE, TABLET & DESKTOP OPTIMIZED)
    ========================================================== */
@@ -2948,20 +3261,30 @@ body.dark-mode .icon-circle-indigo {
     flex-wrap: wrap;
     gap: 0.4rem;
   }
-  .festive-content {
-    gap: 0.45rem;
-    padding: 0 0.35rem;
-  }
-  .festive-tag {
-    font-size: 0.68rem;
-    padding: 0.22rem 0.65rem;
-  }
-  .festive-text {
+  .festive-banner {
+    padding: 0.28rem 0;
     font-size: 0.78rem;
   }
-  .festive-cta {
-    font-size: 0.72rem;
-    padding: 0.2rem 0.65rem;
+  .festive-content {
+    gap: 0.35rem;
+    padding: 0 1.8rem 0 0.5rem;
+    justify-content: center;
+  }
+  .offer-message-wrap {
+    font-size: 0.76rem;
+    gap: 0.3rem;
+  }
+  .promo-chip {
+    font-size: 0.74rem;
+    padding: 0.1rem 0.42rem;
+  }
+  .festive-cta-ghost {
+    font-size: 0.7rem;
+    padding: 0.14rem 0.48rem;
+  }
+  .festive-close-btn {
+    right: 0.35rem;
+    font-size: 0.85rem;
   }
   .header-container {
     padding: 0 0.75rem;
@@ -3054,6 +3377,19 @@ body.dark-mode .icon-circle-indigo {
   .stat-item {
     align-items: center;
     text-align: center;
+  }
+  .stat-item-clickable {
+    padding: 0.25rem 0.35rem;
+    margin: -0.25rem -0.35rem;
+  }
+  .stat-number-wrap {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.2rem;
+  }
+  .stat-claim-badge {
+    font-size: 0.62rem;
+    padding: 0.08rem 0.35rem;
   }
   .stat-number {
     font-size: 1.4rem;
@@ -3461,6 +3797,9 @@ body.dark-mode .icon-circle-indigo {
     flex-direction: column;
     text-align: center;
     gap: 0.5rem;
+  }
+  .footer-bottom-links {
+    justify-content: center;
   }
   .stepper-container {
     flex-direction: column;

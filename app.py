@@ -89,6 +89,7 @@ def calculate_chargeable_weight(actual_w, l, w, h):
 
 # --- PAGE ROUTES ---
 @app.route("/")
+@app.route("/book")
 def index():
     return render_template("index.html")
 
@@ -98,21 +99,73 @@ def admin_page():
 
 # --- PUBLIC APIS ---
 
-# 1. Active Festive Offers
+# 1. Active Festive & Welcome Offers
 @app.route("/api/offers", methods=["GET"])
 def get_offers():
     conn = get_db_connection()
     offer = conn.execute("SELECT * FROM offers WHERE is_active = 1 ORDER BY id DESC LIMIT 1").fetchone()
     conn.close()
     if offer:
+        offer_dict = dict(offer)
+        code = (offer_dict.get("code") or "FIRST50").strip().upper()
+        discount = float(offer_dict.get("discount_amount") or 50.0)
+        text = offer_dict.get("text") or f"First booking par ₹{int(discount)} OFF · Code: {code}"
+        text_hi = offer_dict.get("hindi_text") or f"पहली बुकिंग पर ₹{int(discount)} की छूट · कोड: {code}"
         return jsonify({
-            "id": offer["id"],
-            "title": offer["title"],
-            "text": offer["text"],
-            "discount_amount": offer["discount_amount"],
-            "is_active": bool(offer["is_active"])
+            "id": offer_dict["id"],
+            "title": offer_dict.get("title", "Special Offer 🎁"),
+            "text": text,
+            "text_hi": text_hi,
+            "code": code,
+            "discount_amount": discount,
+            "is_active": bool(offer_dict["is_active"])
         })
-    return jsonify({"is_active": False})
+    return jsonify({
+        "is_active": True,
+        "title": "Welcome Offer 🎁",
+        "text": "First booking par ₹50 OFF · Code: FIRST50",
+        "text_hi": "पहली बुकिंग पर ₹50 की छूट · कोड: FIRST50",
+        "code": "FIRST50",
+        "discount_amount": 50.0
+    })
+
+# 1b. Validate Promo Code
+@app.route("/api/promo/validate", methods=["GET", "POST"])
+def validate_promo():
+    if request.method == "POST":
+        data = request.get_json() or {}
+        code = data.get("code", "").strip().upper()
+    else:
+        code = request.args.get("code", "").strip().upper()
+
+    if not code:
+        return jsonify({"valid": False, "message": "Please enter a promo code."}), 400
+
+    conn = get_db_connection()
+    offer = conn.execute("SELECT * FROM offers WHERE is_active = 1 ORDER BY id DESC LIMIT 1").fetchone()
+    conn.close()
+
+    active_code = "FIRST50"
+    discount_val = 50.0
+    if offer:
+        offer_dict = dict(offer)
+        active_code = (offer_dict.get("code") or "FIRST50").strip().upper()
+        discount_val = float(offer_dict.get("discount_amount") or 50.0)
+
+    if code == active_code:
+        return jsonify({
+            "valid": True,
+            "code": active_code,
+            "discount_amount": discount_val,
+            "message": f"{active_code} applied! ₹{int(discount_val)} off on your first booking."
+        })
+    else:
+        return jsonify({
+            "valid": False,
+            "code": code,
+            "discount_amount": 0.0,
+            "message": f"Invalid promo code '{code}'. Please enter a valid coupon code."
+        }), 400
 
 # 2. Check Pincode
 @app.route("/api/pincodes/check", methods=["GET"])
@@ -283,12 +336,36 @@ def calculate_rate():
         extra_units = math.ceil(chargeable_w - 1.0)
         base_amount = first_kg_price + (extra_units * extra_kg_price)
 
-    # Check discount
+    # Check promo code & first-booking discount
     discount = 0.0
-    if mobile and len(mobile) >= 10:
+    promo_code = data.get("promo_code", "").strip().upper()
+    promo_applied = False
+    promo_message = ""
+
+    # Fetch active offer
+    active_offer = conn.execute("SELECT * FROM offers WHERE is_active = 1 ORDER BY id DESC LIMIT 1").fetchone()
+    active_code = "FIRST50"
+    offer_discount = 50.0
+    if active_offer:
+        offer_dict = dict(active_offer)
+        active_code = (offer_dict.get("code") or "FIRST50").strip().upper()
+        offer_discount = float(offer_dict.get("discount_amount") or 50.0)
+
+    if promo_code:
+        if promo_code == active_code:
+            discount = offer_discount
+            promo_applied = True
+            promo_message = f"{active_code} applied! ₹{int(offer_discount)} off on your first booking."
+        else:
+            promo_applied = False
+            promo_message = f"Invalid promo code '{promo_code}'."
+    elif mobile and len(mobile) >= 10:
         cust = conn.execute("SELECT * FROM customers WHERE mobile = ?", (mobile,)).fetchone()
         if not cust or cust["first_booking_used"] == 0:
-            discount = 50.0
+            discount = offer_discount
+            promo_applied = True
+            promo_code = active_code
+            promo_message = f"Welcome discount auto-applied (-₹{int(offer_discount)})."
 
     final_amount = max(20.0, round(base_amount - discount, 2))
     conn.close()
@@ -305,7 +382,10 @@ def calculate_rate():
         "chargeable_weight": chargeable_w,
         "base_amount": round(base_amount, 2),
         "discount": discount,
-        "final_amount": final_amount
+        "final_amount": final_amount,
+        "promo_code": promo_code,
+        "promo_applied": promo_applied,
+        "promo_message": promo_message
     })
 
 # 6. Book Parcel
@@ -367,18 +447,30 @@ def create_booking():
     else:
         base_amount = first_kg_price + (math.ceil(ch_w - 1.0) * extra_kg_price)
 
-    # Check first-booking discount
+    # Check promo code & first-booking discount
     discount = 0.0
-    cust = cursor.execute("SELECT * FROM customers WHERE mobile = ?", (sender_mobile,)).fetchone()
-    if not cust:
-        cursor.execute("""
-        INSERT INTO customers (name, mobile, email, first_booking_used)
-        VALUES (?, ?, ?, 1)
-        """, (sender_name, sender_mobile, sender_email))
-        discount = 50.0
-    elif cust["first_booking_used"] == 0:
-        cursor.execute("UPDATE customers SET first_booking_used = 1 WHERE mobile = ?", (sender_mobile,))
-        discount = 50.0
+    promo_code = data.get("promo_code", "").strip().upper()
+    active_offer = cursor.execute("SELECT * FROM offers WHERE is_active = 1 ORDER BY id DESC LIMIT 1").fetchone()
+    active_code = "FIRST50"
+    offer_discount = 50.0
+    if active_offer:
+        offer_dict = dict(active_offer)
+        active_code = (offer_dict.get("code") or "FIRST50").strip().upper()
+        offer_discount = float(offer_dict.get("discount_amount") or 50.0)
+
+    if promo_code and promo_code == active_code:
+        discount = offer_discount
+    else:
+        cust = cursor.execute("SELECT * FROM customers WHERE mobile = ?", (sender_mobile,)).fetchone()
+        if not cust:
+            cursor.execute("""
+            INSERT INTO customers (name, mobile, email, first_booking_used)
+            VALUES (?, ?, ?, 1)
+            """, (sender_name, sender_mobile, sender_email))
+            discount = offer_discount
+        elif cust["first_booking_used"] == 0:
+            cursor.execute("UPDATE customers SET first_booking_used = 1 WHERE mobile = ?", (sender_mobile,))
+            discount = offer_discount
 
     final_amount = max(20.0, round(base_amount - discount, 2))
     tracking_id = generate_tracking_id(cursor)
@@ -394,6 +486,7 @@ def create_booking():
     exp_date = (datetime.now() + timedelta(days=days_add)).strftime("%d %b %Y")
 
     payment_status = "Paid" if payment_method.startswith("Online") else "Cash at Pickup"
+    applied_promo = promo_code if (promo_code and promo_code == active_code) else (active_code if discount > 0 else None)
 
     cursor.execute("""
     INSERT INTO bookings (
@@ -401,14 +494,14 @@ def create_booking():
         receiver_name, receiver_mobile, receiver_address, receiver_pincode, receiver_city,
         package_type, actual_weight, length, width, height, volumetric_weight, chargeable_weight,
         zone, base_amount, discount, amount, payment_method, payment_status, current_status, current_hub,
-        stoppages, expected_delivery_date
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        stoppages, expected_delivery_date, promo_code
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         tracking_id, sender_name, sender_mobile, sender_email, sender_address, sender_pincode, sender_city,
         receiver_name, receiver_mobile, receiver_address, receiver_pincode, receiver_city,
         package_type, actual_w, float(data.get("length", 0)), float(data.get("width", 0)), float(data.get("height", 0)),
         vol_w, ch_w, zone, base_amount, discount, final_amount, payment_method, payment_status,
-        'Booking Confirmed', 'Ranchi Overbridge Hub', stoppages, exp_date
+        'Booking Confirmed', 'Ranchi Overbridge Hub', stoppages, exp_date, applied_promo
     ))
 
     # Add initial event
@@ -769,14 +862,16 @@ def admin_offers():
     if request.method == "PUT":
         data = request.get_json() or {}
         text = data.get("text", "")
+        code = data.get("code", "FIRST50").strip().upper()
+        hindi_text = data.get("hindi_text", "")
         discount = data.get("discount_amount", 50.0)
         is_active = 1 if data.get("is_active") else 0
 
         conn.execute("""
         UPDATE offers
-        SET text = ?, discount_amount = ?, is_active = ?
+        SET text = ?, hindi_text = ?, code = ?, discount_amount = ?, is_active = ?
         WHERE id = 1
-        """, (text, float(discount), is_active))
+        """, (text, hindi_text, code, float(discount), is_active))
         conn.commit()
         conn.close()
         return jsonify({"success": True, "message": "Offer updated."})

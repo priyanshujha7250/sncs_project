@@ -7,6 +7,14 @@ let currentLanguage = 'en';
 let globalRates = [];
 let bookingDiscount = 0.0;
 let lastCreatedBooking = null;
+let activeOfferData = {
+  text: "First booking par ₹50 OFF · Code: FIRST50",
+  text_hi: "पहली बुकिंग पर ₹50 की छूट · कोड: FIRST50",
+  code: "FIRST50",
+  discount_amount: 50.0,
+  is_active: true
+};
+let appliedPromoCode = "";
 
 const i18nDictionary = {
   en: {
@@ -25,7 +33,10 @@ const i18nDictionary = {
     dock_price_title: "Price Calculator",
     dock_price_desc: "Volumetric & actual weight rates",
     dock_pin_title: "Pin Code Check",
-    dock_pin_desc: "Verify coverage & delivery days"
+    dock_pin_desc: "Verify coverage & delivery days",
+    offer_prefix: "First booking par ₹50 OFF · Code:",
+    offer_claim: "Claim Discount →",
+    hero_stat_claim: "Claim →"
   },
   hi: {
     nav_track: "पार्सल ट्रैक करें",
@@ -43,7 +54,10 @@ const i18nDictionary = {
     dock_price_title: "रेट कैलकुलेटर",
     dock_price_desc: "वजन और साइज के अनुसार खर्च",
     dock_pin_title: "पिन कोड चेक",
-    dock_pin_desc: "डिलीवरी समय और सर्विसिबिलिटी"
+    dock_pin_desc: "डिलीवरी समय और सर्विसिबिलिटी",
+    offer_prefix: "पहली बुकिंग पर ₹50 की छूट · कोड:",
+    offer_claim: "छूट पाएँ →",
+    hero_stat_claim: "छूट लें →"
   }
 };
 
@@ -51,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   fetchFestiveOffer();
   fetchRates();
+  checkUrlPromoParams();
   recalculateBookingQuote();
   runLiveCalculator();
   executeTracking(false);
@@ -100,6 +115,8 @@ function toggleLanguage() {
       el.innerHTML = dict[key];
     }
   });
+
+  updateOfferDisplayForLanguage();
 }
 
 // Smooth Scroll Helper with Header Offset
@@ -164,20 +181,309 @@ function switchTab(tabId, shouldScroll = true) {
   }
 }
 
-// Fetch Active Festive Offer
+// ==========================================================
+// FESTIVE OFFER & PROMO CODE SYSTEM
+// ==========================================================
+
+// Fetch Active Festive Offer from Server
 async function fetchFestiveOffer() {
+  const banner = document.getElementById('festive-banner');
+  if (!banner) return;
+
+  // Check if dismissed in this browser
+  if (localStorage.getItem('sncs_hide_offer_banner') === 'true') {
+    banner.style.display = 'none';
+    return;
+  }
+
   try {
     const res = await fetch('/api/offers');
     const data = await res.json();
-    const banner = document.getElementById('festive-banner');
-    if (data.is_active && data.text) {
-      document.getElementById('festive-text').innerText = data.text;
+    if (data && data.is_active) {
+      activeOfferData = data;
+      const code = (data.code || 'FIRST50').trim().toUpperCase();
+
+      const codeEl = document.getElementById('banner-promo-code');
+      if (codeEl) codeEl.innerText = code;
+
+      const chipEl = document.getElementById('banner-promo-chip');
+      if (chipEl) chipEl.setAttribute('aria-label', `Copy promo code ${code}`);
+
+      // Update hero stat offer item dynamically
+      const heroStat = document.getElementById('hero-stat-offer');
+      if (heroStat) {
+        heroStat.setAttribute('onclick', `navigateToBookWithPromo('${code}')`);
+        heroStat.setAttribute('onkeydown', `if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToBookWithPromo('${code}');}`);
+        heroStat.title = `Click to claim ₹${Math.round(data.discount_amount || 50)} welcome discount with code ${code}`;
+        heroStat.setAttribute('aria-label', `Claim ₹${Math.round(data.discount_amount || 50)} OFF first booking welcome discount with code ${code}`);
+        const statNum = heroStat.querySelector('.stat-number');
+        if (statNum) statNum.innerText = `₹${Math.round(data.discount_amount || 50)} OFF`;
+      }
+
+      updateOfferDisplayForLanguage();
       banner.style.display = 'block';
     } else {
       banner.style.display = 'none';
     }
   } catch (err) {
     console.error('Failed to load offer banner:', err);
+  }
+}
+
+// Update Offer Prefix According to Selected Language
+function updateOfferDisplayForLanguage() {
+  const prefixEl = document.getElementById('festive-prefix');
+  if (!prefixEl) return;
+
+  const discount = (activeOfferData && activeOfferData.discount_amount) ? Math.round(activeOfferData.discount_amount) : 50;
+
+  if (currentLanguage === 'hi') {
+    if (activeOfferData && activeOfferData.text_hi) {
+      const parts = activeOfferData.text_hi.split(/·\s*कोड:|·\s*Code:/i);
+      prefixEl.innerText = (parts[0] ? parts[0].trim() + ' · कोड:' : `पहली बुकिंग पर ₹${discount} की छूट · कोड:`);
+    } else {
+      prefixEl.innerText = `पहली बुकिंग पर ₹${discount} की छूट · कोड:`;
+    }
+  } else {
+    if (activeOfferData && activeOfferData.text) {
+      const parts = activeOfferData.text.split(/·\s*Code:|·\s*कोड:/i);
+      prefixEl.innerText = (parts[0] ? parts[0].trim() + ' · Code:' : `First booking par ₹${discount} OFF · Code:`);
+    } else {
+      prefixEl.innerText = `First booking par ₹${discount} OFF · Code:`;
+    }
+  }
+}
+
+// Dismiss and Remember in LocalStorage
+function closeOfferBanner() {
+  const banner = document.getElementById('festive-banner');
+  if (banner) {
+    banner.style.display = 'none';
+  }
+  localStorage.setItem('sncs_hide_offer_banner', 'true');
+}
+
+// Copy Promo Code from Banner Chip with Tooltip Feedback
+function copyBannerPromoCode(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const code = (activeOfferData && activeOfferData.code) ? activeOfferData.code : 'FIRST50';
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).then(() => {
+      showCopiedFeedback();
+    }).catch(() => {
+      fallbackCopyText(code);
+    });
+  } else {
+    fallbackCopyText(code);
+  }
+}
+
+function fallbackCopyText(text) {
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  textArea.style.position = 'fixed';
+  textArea.style.left = '-9999px';
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  try {
+    document.execCommand('copy');
+    showCopiedFeedback();
+  } catch (err) {
+    prompt('Copy promo code:', text);
+  }
+  document.body.removeChild(textArea);
+}
+
+function showCopiedFeedback() {
+  const chip = document.getElementById('banner-promo-chip');
+  if (chip) {
+    chip.classList.add('copied');
+    setTimeout(() => {
+      chip.classList.remove('copied');
+    }, 2200);
+  }
+  showRealtimeToast('📋 Code Copied!', `Coupon code <strong>${(activeOfferData && activeOfferData.code) || 'FIRST50'}</strong> copied to clipboard.`);
+}
+
+// Claim Discount button in Offer Bar
+function claimOfferDiscount(e) {
+  if (e) e.preventDefault();
+  const code = (activeOfferData && activeOfferData.code) ? activeOfferData.code : 'FIRST50';
+  navigateToBookWithPromo(code);
+}
+
+// Navigate to Book & Pay Tab and Auto-Apply Promo
+function navigateToBookWithPromo(code) {
+  const targetCode = (code || (activeOfferData && activeOfferData.code) || 'FIRST50').trim().toUpperCase();
+
+  // Push URL route without reloading
+  try {
+    const newUrl = `${window.location.protocol}//${window.location.host}/book?promo=${encodeURIComponent(targetCode)}`;
+    window.history.pushState({ path: newUrl }, '', newUrl);
+  } catch (e) {}
+
+  switchTab('book', true);
+  applyPromoCode(targetCode, true);
+
+  const bookTab = document.getElementById('tab-book');
+  if (bookTab) {
+    smoothScrollToElement(bookTab);
+  }
+
+  setTimeout(() => {
+    const promoInput = document.getElementById('booking_promo_code');
+    if (promoInput) {
+      promoInput.focus();
+      promoInput.select();
+    }
+  }, 400);
+}
+
+// Apply Promo Button click or Enter key in Booking Form
+function applyBookingPromoCode() {
+  const inputEl = document.getElementById('booking_promo_code');
+  const code = (inputEl ? inputEl.value : '').trim();
+  if (!code) {
+    const alertBox = document.getElementById('promo-alert-box');
+    if (alertBox) {
+      alertBox.className = 'promo-alert alert-error';
+      alertBox.innerHTML = `<span>⚠️</span> <div>Please enter a promo code (e.g. <strong>${(activeOfferData && activeOfferData.code) || 'FIRST50'}</strong>).</div>`;
+      alertBox.classList.remove('hidden');
+    }
+    return;
+  }
+  applyPromoCode(code, true);
+}
+
+// Validate & Apply Promo Code Logic
+async function applyPromoCode(rawCode, showFeedback = true) {
+  const code = (rawCode || '').trim().toUpperCase();
+  const alertBox = document.getElementById('promo-alert-box');
+  const inputEl = document.getElementById('booking_promo_code');
+
+  if (!code) {
+    if (alertBox) {
+      alertBox.className = 'promo-alert alert-error';
+      alertBox.innerHTML = `<span>⚠️</span> <div>Please enter a valid coupon code.</div>`;
+      alertBox.classList.remove('hidden');
+    }
+    return;
+  }
+
+  if (inputEl) inputEl.value = code;
+
+  try {
+    const res = await fetch(`/api/promo/validate?code=${encodeURIComponent(code)}`);
+    const data = await res.json();
+
+    if (res.ok && data.valid) {
+      appliedPromoCode = data.code;
+      localStorage.setItem('sncs_applied_promo', data.code);
+
+      const discountAmt = data.discount_amount || 50;
+
+      if (alertBox) {
+        alertBox.className = 'promo-alert alert-success';
+        alertBox.innerHTML = `
+          <span>✓</span>
+          <div>
+            <strong>${data.code} applied!</strong> ₹${Math.round(discountAmt)} off on your first booking.
+            <a href="javascript:void(0)" class="promo-remove-link" onclick="removePromoCode(true)">Remove</a>
+          </div>
+        `;
+        alertBox.classList.remove('hidden');
+      }
+
+      // Update sidebar summary discount immediately
+      const sumLabel = document.getElementById('sum-discount-label');
+      if (sumLabel) sumLabel.innerText = `Coupon (${data.code}):`;
+
+      const sumVal = document.getElementById('sum-discount-val');
+      if (sumVal) sumVal.innerText = `- ₹${parseFloat(discountAmt).toFixed(2)}`;
+
+      const sumRow = document.getElementById('sum-discount-row');
+      if (sumRow) sumRow.style.display = 'flex';
+
+      // Recalculate quote with promo applied
+      recalculateBookingQuote();
+
+      if (showFeedback) {
+        showRealtimeToast('🎉 Coupon Applied!', `<strong>${data.code}</strong> applied! ₹${Math.round(discountAmt)} discount activated on your booking.`);
+      }
+    } else {
+      appliedPromoCode = "";
+      localStorage.removeItem('sncs_applied_promo');
+
+      if (alertBox) {
+        alertBox.className = 'promo-alert alert-error';
+        alertBox.innerHTML = `<span>⚠️</span> <div>${data.message || `Invalid coupon code '${code}'. Please check and try again.`}</div>`;
+        alertBox.classList.remove('hidden');
+      }
+
+      recalculateBookingQuote();
+    }
+  } catch (err) {
+    if (alertBox) {
+      alertBox.className = 'promo-alert alert-error';
+      alertBox.innerHTML = `<span>⚠️</span> <div>Network error verifying coupon code. Please retry.</div>`;
+      alertBox.classList.remove('hidden');
+    }
+  }
+}
+
+// Remove Applied Promo Code
+function removePromoCode(showToast = true) {
+  appliedPromoCode = "";
+  localStorage.removeItem('sncs_applied_promo');
+
+  const inputEl = document.getElementById('booking_promo_code');
+  if (inputEl) inputEl.value = "";
+
+  const alertBox = document.getElementById('promo-alert-box');
+  if (alertBox) {
+    alertBox.innerHTML = "";
+    alertBox.classList.add('hidden');
+  }
+
+  recalculateBookingQuote();
+
+  if (showToast) {
+    showRealtimeToast('Coupon Removed', 'Promo code discount has been removed.', false);
+  }
+}
+
+// Check URL Query Parameters for Promo Code or /book Route
+function checkUrlPromoParams() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const promo = urlParams.get('promo') || urlParams.get('code') || urlParams.get('coupon');
+  const isBookPath = window.location.pathname.startsWith('/book');
+
+  if (promo) {
+    switchTab('book', false);
+    applyPromoCode(promo, true);
+    setTimeout(() => {
+      const bookSection = document.getElementById('tab-book');
+      if (bookSection) smoothScrollToElement(bookSection);
+    }, 200);
+  } else if (isBookPath) {
+    switchTab('book', false);
+    const defaultCode = (activeOfferData && activeOfferData.code) || 'FIRST50';
+    applyPromoCode(defaultCode, true);
+    setTimeout(() => {
+      const bookSection = document.getElementById('tab-book');
+      if (bookSection) smoothScrollToElement(bookSection);
+    }, 200);
+  } else {
+    // Check localStorage for previously applied promo
+    const savedPromo = localStorage.getItem('sncs_applied_promo');
+    if (savedPromo) {
+      applyPromoCode(savedPromo, false);
+    }
   }
 }
 
@@ -1024,6 +1330,7 @@ async function recalculateBookingQuote() {
   const h = parseFloat(document.getElementById('pkg_height')?.value || 10);
   const pin = (document.getElementById('receiver_pincode')?.value || '').trim();
   const mobile = document.getElementById('sender_mobile')?.value || '';
+  const promoToSend = (appliedPromoCode || document.getElementById('booking_promo_code')?.value || '').trim().toUpperCase();
 
   const volW = Math.round(((l * w * h) / 5000) * 100) / 100;
   const chargeW = Math.max(0.5, Math.max(actualW, volW));
@@ -1054,7 +1361,8 @@ async function recalculateBookingQuote() {
         width: w,
         height: h,
         destination_pincode: pin,
-        sender_mobile: mobile
+        sender_mobile: mobile,
+        promo_code: promoToSend
       })
     });
     const quote = await res.json();
@@ -1078,6 +1386,10 @@ async function recalculateBookingQuote() {
     if (quote.discount > 0) {
       document.getElementById('sum-discount-row').style.display = 'flex';
       document.getElementById('sum-discount-val').innerText = `- ₹${quote.discount.toFixed(2)}`;
+      const labelEl = document.getElementById('sum-discount-label');
+      if (labelEl) {
+        labelEl.innerText = quote.promo_code ? `Coupon (${quote.promo_code}):` : "First Booking Offer:";
+      }
     } else {
       document.getElementById('sum-discount-row').style.display = 'none';
     }
@@ -1101,6 +1413,8 @@ async function handleBookingSubmit(e) {
   submitBtn.disabled = true;
   submitBtn.innerText = "Processing Booking & Pickup Request...";
 
+  const promoToSend = (appliedPromoCode || document.getElementById('booking_promo_code')?.value || '').trim().toUpperCase();
+
   const payload = {
     sender_name: document.getElementById('sender_name').value.trim(),
     sender_mobile: document.getElementById('sender_mobile').value.trim(),
@@ -1120,7 +1434,8 @@ async function handleBookingSubmit(e) {
     length: parseFloat(document.getElementById('pkg_len').value),
     width: parseFloat(document.getElementById('pkg_width').value),
     height: parseFloat(document.getElementById('pkg_height').value),
-    payment_method: document.querySelector('input[name="payment_mode"]:checked').value
+    payment_method: document.querySelector('input[name="payment_mode"]:checked').value,
+    promo_code: promoToSend
   };
 
   try {
@@ -1153,6 +1468,7 @@ async function handleBookingSubmit(e) {
     document.getElementById('sender_pincode').value = "834001";
     isBookingDestinationServiceable = false;
     updateBookingSubmitButtonState();
+    removePromoCode(false);
   } catch (err) {
     alert("Connection error. Please try again.");
   } finally {

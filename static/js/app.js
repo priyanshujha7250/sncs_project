@@ -15,6 +15,7 @@ let activeOfferData = {
   is_active: true
 };
 let appliedPromoCode = "";
+let lastTrackedConsignment = null;
 
 const i18nDictionary = {
   en: {
@@ -117,6 +118,10 @@ function toggleLanguage() {
   });
 
   updateOfferDisplayForLanguage();
+
+  if (lastTrackedConsignment) {
+    renderTrackingView(lastTrackedConsignment);
+  }
 }
 
 // Smooth Scroll Helper with Header Offset
@@ -590,8 +595,24 @@ async function executeTracking(shouldScroll = false) {
   }
 }
 
+function formatMilestoneTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return ts;
+  return d.toLocaleString(currentLanguage === 'hi' ? 'hi-IN' : 'en-IN', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
 function renderTrackingView(data) {
+  if (!data) return;
+  lastTrackedConsignment = data;
+
   const resultArea = document.getElementById('tracking-result-area');
+  if (!resultArea) return;
 
   // Determine Stepper Stage
   // 1: Booking Confirmed, 2: Picked Up, 3: In Transit, 4: Out for Delivery, 5: Delivered
@@ -607,12 +628,13 @@ function renderTrackingView(data) {
   const currentLevel = statusHierarchy[data.current_status] || 1;
   const progressPercent = ((currentLevel - 1) / 4) * 100;
 
+  // Flowchart Steps (Clean & customer-friendly)
   const steps = [
-    { num: 1, label: 'Booked', icon: '📝', desc: 'Ranchi Counter' },
-    { num: 2, label: 'Picked Up', icon: '🛵', desc: 'Overbridge Hub' },
-    { num: 3, label: 'In Transit', icon: '✈️', desc: `${data.stoppages || 1} Stoppages` },
-    { num: 4, label: 'Out for Delivery', icon: '🚚', desc: 'Local Delivery' },
-    { num: 5, label: 'Delivered', icon: '📦', desc: data.receiver_city }
+    { num: 1, label: (currentLanguage === 'hi' ? 'बुकिंग' : 'Booked'), icon: '📝', desc: (currentLanguage === 'hi' ? 'कन्फर्म' : 'Confirmed') },
+    { num: 2, label: (currentLanguage === 'hi' ? 'पिकअप' : 'Picked Up'), icon: '🛵', desc: (currentLanguage === 'hi' ? 'प्राप्त' : 'Collected') },
+    { num: 3, label: (currentLanguage === 'hi' ? 'रास्ते में' : 'In Transit'), icon: '✈️', desc: (currentLanguage === 'hi' ? 'ऑन द वे' : 'On the Way') },
+    { num: 4, label: (currentLanguage === 'hi' ? 'डिलीवरी' : 'Out for Delivery'), icon: '🚚', desc: (currentLanguage === 'hi' ? 'डिलीवरी के लिए' : 'Reaching You') },
+    { num: 5, label: (currentLanguage === 'hi' ? 'डिलीवर' : 'Delivered'), icon: '📦', desc: data.receiver_city || (currentLanguage === 'hi' ? 'गंतव्य' : 'Destination') }
   ];
 
   const flowchartHtml = `
@@ -637,56 +659,168 @@ function renderTrackingView(data) {
     </div>
   `;
 
-  // Events Timeline
-  const eventsHtml = (data.events || []).map((ev, idx) => {
-    const isLatest = idx === (data.events.length - 1);
-    const dateFormatted = new Date(ev.timestamp).toLocaleString('en-IN', {
-      day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
-    });
+  // Extract latest timestamps for each of the 5 customer stages (merging duplicate/consecutive scans)
+  const stageTimestamps = {};
+  (data.events || []).forEach(ev => {
+    const s = (ev.status || '').trim();
+    if (s === 'Booking Confirmed') {
+      stageTimestamps[1] = ev.timestamp;
+    } else if (s === 'Picked Up') {
+      stageTimestamps[2] = ev.timestamp;
+    } else if (s === 'Dispatched' || s === 'In Transit') {
+      stageTimestamps[3] = ev.timestamp; // Always keeps latest timestamp for In Transit
+    } else if (s === 'Out for Delivery') {
+      stageTimestamps[4] = ev.timestamp;
+    } else if (s === 'Delivered') {
+      stageTimestamps[5] = ev.timestamp;
+    }
+  });
+
+  // Safe fallback for completed stages if not logged as separate events
+  const baseTime = data.created_at || (data.events && data.events[0] ? data.events[0].timestamp : null);
+  if (currentLevel >= 1 && !stageTimestamps[1]) stageTimestamps[1] = baseTime;
+  if (currentLevel >= 2 && !stageTimestamps[2]) stageTimestamps[2] = stageTimestamps[1] || baseTime;
+  if (currentLevel >= 3 && !stageTimestamps[3]) stageTimestamps[3] = stageTimestamps[2] || baseTime;
+  if (currentLevel >= 4 && !stageTimestamps[4]) stageTimestamps[4] = stageTimestamps[3] || baseTime;
+  if (currentLevel >= 5 && !stageTimestamps[5]) stageTimestamps[5] = stageTimestamps[4] || baseTime;
+
+  const originCity = data.sender_city || 'Ranchi';
+  const destCity = data.receiver_city || (currentLanguage === 'hi' ? 'गंतव्य' : 'Destination');
+
+  // The 5 Customer-Friendly Stages
+  const stageConfigs = [
+    {
+      step: 1,
+      titleEn: 'Booking Confirmed',
+      titleHi: 'बुकिंग कन्फर्म',
+      msgEn: 'Your parcel has been booked and registered.',
+      msgHi: 'आपका पार्सल रजिस्टर हो गया है।',
+      pendEn: 'Awaiting parcel registration.',
+      pendHi: 'पार्सल रजिस्ट्रेशन की प्रतीक्षा है।'
+    },
+    {
+      step: 2,
+      titleEn: 'Picked Up',
+      titleHi: 'पिकअप सम्पन्न',
+      msgEn: 'Parcel has been picked up by our executive.',
+      msgHi: 'पार्सल हमारे एग्जीक्यूटिव ने पिकअप कर लिया है।',
+      pendEn: 'Pickup will be scheduled shortly.',
+      pendHi: 'पिकअप जल्द शेड्यूल किया जाएगा।'
+    },
+    {
+      step: 3,
+      titleEn: 'In Transit',
+      titleHi: 'रास्ते में (In Transit)',
+      msgEn: `Parcel is in transit from ${originCity} to ${destCity}.`,
+      msgHi: `पार्सल ${originCity} से ${destCity} के रास्ते में है।`,
+      pendEn: `Transit from ${originCity} to ${destCity} pending.`,
+      pendHi: `${originCity} से ${destCity} ट्रांजिट अभी बाकी है।`
+    },
+    {
+      step: 4,
+      titleEn: 'Out for Delivery',
+      titleHi: 'डिलीवरी के लिए रवाना',
+      msgEn: 'Parcel is out for delivery to your address.',
+      msgHi: 'पार्सल आपके पास डिलीवर होने निकल गया है।',
+      pendEn: 'Will be out for delivery upon arrival.',
+      pendHi: 'गंतव्य पहुँचने पर डिलीवरी के लिए निकलेगा।'
+    },
+    {
+      step: 5,
+      titleEn: 'Delivered',
+      titleHi: 'डिलीवर हो गया',
+      msgEn: 'Parcel delivered safely.',
+      msgHi: 'पार्सल सुरक्षित रूप से डिलीवर हो गया।',
+      pendEn: 'Awaiting final delivery.',
+      pendHi: 'अंतिम डिलीवरी की प्रतीक्षा है।'
+    }
+  ];
+
+  const milestonesHtml = stageConfigs.map(cfg => {
+    const isCompleted = (cfg.step < currentLevel) || (cfg.step === 5 && currentLevel === 5);
+    const isActive = (cfg.step === currentLevel) && (currentLevel < 5);
+    const isPending = (cfg.step > currentLevel);
+
+    let stageClass = '';
+    let dotContent = '';
+    let badgeClass = '';
+    let badgeLabel = '';
+    let timeDisplay = '';
+    let lineMessage = '';
+
+    const title = (currentLanguage === 'hi' ? cfg.titleHi : cfg.titleEn);
+    const rawTime = stageTimestamps[cfg.step];
+
+    if (isCompleted) {
+      stageClass = 'stage-completed';
+      dotContent = '✓';
+      badgeClass = 'badge-done';
+      badgeLabel = (cfg.step === 5)
+        ? (currentLanguage === 'hi' ? '🎉 डिलीवर' : '🎉 Delivered')
+        : (currentLanguage === 'hi' ? '✓ पूर्ण' : '✓ Completed');
+      timeDisplay = rawTime ? `🕒 ${formatMilestoneTime(rawTime)}` : (currentLanguage === 'hi' ? 'पूर्ण' : 'Completed');
+      lineMessage = (currentLanguage === 'hi' ? cfg.msgHi : cfg.msgEn);
+    } else if (isActive) {
+      stageClass = 'stage-active';
+      dotContent = '<span class="active-pulse-inner"></span>';
+      badgeClass = 'badge-active';
+      badgeLabel = (currentLanguage === 'hi' ? '● वर्तमान स्थिति' : '● Current Status');
+      timeDisplay = rawTime ? `🕒 ${formatMilestoneTime(rawTime)}` : (currentLanguage === 'hi' ? 'प्रगति पर' : 'In Progress');
+      lineMessage = (currentLanguage === 'hi' ? cfg.msgHi : cfg.msgEn);
+    } else {
+      stageClass = 'stage-pending';
+      dotContent = '';
+      badgeClass = 'badge-pending';
+      badgeLabel = (currentLanguage === 'hi' ? '⏳ प्रतीक्षित' : '⏳ Upcoming');
+      timeDisplay = (currentLanguage === 'hi' ? 'प्रतीक्षित' : 'Pending');
+      lineMessage = (currentLanguage === 'hi' ? cfg.pendHi : cfg.pendEn);
+    }
 
     return `
-      <div class="timeline-item ${isLatest ? 'latest' : ''}" style="animation-delay: ${(idx * 0.08).toFixed(2)}s;">
-        <div class="timeline-dot"></div>
+      <div class="timeline-item ${stageClass}">
+        <div class="timeline-dot">${dotContent}</div>
         <div class="timeline-content">
           <div class="timeline-header">
-            <span class="timeline-status">${ev.status}</span>
-            <span class="timeline-time">🕒 ${dateFormatted}</span>
+            <div class="timeline-title-wrap">
+              <span class="timeline-status">${title}</span>
+              <span class="stage-badge ${badgeClass}">${badgeLabel}</span>
+            </div>
+            <span class="timeline-time">${timeDisplay}</span>
           </div>
-          <div class="timeline-hub">📍 ${ev.hub_name}</div>
-          <p class="timeline-remarks">${ev.remarks || ''}</p>
+          <p class="timeline-desc">${lineMessage}</p>
         </div>
       </div>
     `;
-  }).reverse().join('');
+  }).join('');
 
   resultArea.innerHTML = `
     <!-- 3D ContainerScroll Wrapper (Aceternity style) -->
     <div class="container-scroll-wrapper" id="tracking-scroll-wrapper">
-      
+
       <!-- Title Component -->
       <div class="container-scroll-title">
         <div class="live-radar-badge" style="gap: 0.5rem;">
           <span class="radar-ping"></span>
-          <span>LIVE SATELLITE & HUB RADAR</span>
+          <span>${currentLanguage === 'hi' ? 'लाइव पार्सल ट्रैकर' : 'LIVE SHIPMENT TRACKER'}</span>
         </div>
         <div style="margin-top: 0.5rem;">
           <span class="live-realtime-badge">
             <span class="live-pulse-radar"></span>
-            <span>Real-Time SSE Sync Active</span>
+            <span>${currentLanguage === 'hi' ? 'रियल-टाइम लाइव अपडेट सक्रिय' : 'Real-Time Live Updates Active'}</span>
             <span style="opacity: 0.75; font-size: 0.72rem; margin-left: 0.35rem;" id="live-stream-ts">● Connected</span>
           </span>
         </div>
         <h2 class="container-scroll-heading">
-          Consignment <span class="gradient-text">${data.tracking_id}</span> Flow
+          ${currentLanguage === 'hi' ? 'पार्सल' : 'Consignment'} <span class="gradient-text">${data.tracking_id}</span>
         </h2>
         <p class="container-scroll-sub">
-          ${data.sender_city} (Origin) ➔ ${data.receiver_city} (${data.receiver_pincode}) • Live Telemetry
+          ${data.sender_city} ➔ ${data.receiver_city} (${data.receiver_pincode})
         </p>
       </div>
 
       <!-- 3D Tablet Device Bezel Mockup -->
       <div class="container-scroll-card" id="tracking-3d-card">
-        
+
         <!-- Mockup Bezel Header -->
         <div class="container-scroll-screen-header">
           <div class="mac-dots">
@@ -695,7 +829,7 @@ function renderTrackingView(data) {
             <span class="mac-dot green"></span>
           </div>
           <div class="screen-title-tab">
-            <span class="pulse-dot-sm"></span> SNCS Live Telemetry Console • ${data.tracking_id}
+            <span class="pulse-dot-sm"></span> SNCS Express Delivery • ${data.tracking_id}
           </div>
           <div class="screen-timestamp" id="tracking-screen-status">
             ● ${data.current_status.toUpperCase()}
@@ -706,10 +840,10 @@ function renderTrackingView(data) {
           <!-- Summary Header Card -->
           <div class="tracking-header-card">
             <div>
-              <span class="tid-label">Consignment Tracking ID</span>
+              <span class="tid-label">${currentLanguage === 'hi' ? 'कंसाइनमेंट ट्रैकिंग आईडी' : 'Consignment Tracking ID'}</span>
               <h1 class="tid-value">${data.tracking_id}</h1>
               <div class="tracking-route">
-                <span>${data.sender_city} (Gandhi Market)</span>
+                <span>${data.sender_city}</span>
                 <span>→</span>
                 <span style="color:#60a5fa;">${data.receiver_city} (${data.receiver_pincode})</span>
               </div>
@@ -719,22 +853,22 @@ function renderTrackingView(data) {
                 ${data.current_status}
               </span>
               <div style="margin-top: 0.6rem; font-size: 0.82rem; color: #cbd5e1;">
-                Expected Delivery: <strong style="color: white;" id="tracking-main-exp-date">${data.expected_delivery_date || 'In 1-2 Days'}</strong>
+                ${currentLanguage === 'hi' ? 'अपेक्षित डिलीवरी' : 'Expected Delivery'}: <strong style="color: white;" id="tracking-main-exp-date">${data.expected_delivery_date || 'In 1-2 Days'}</strong>
               </div>
               <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 0.2rem;">
-                Payment: <strong style="color:#34d399;">${data.payment_status}</strong>
+                ${currentLanguage === 'hi' ? 'भुगतान स्थिति' : 'Payment Status'}: <strong style="color:#34d399;">${data.payment_status}</strong>
               </div>
             </div>
           </div>
 
-          <!-- RANCHI OVERBRIDGE EXPRESS TRUCK SIMULATOR (Starting Super Fast -> Sudden Slow Deceleration) -->
+          <!-- RANCHI OVERBRIDGE EXPRESS TRUCK SIMULATOR -->
           <div class="transit-overbridge-card" id="transitOverbridgeCard">
             <div class="overbridge-header">
               <div class="overbridge-title">
                 <span class="bridge-icon">🌉</span>
                 <div>
-                  <strong>Ranchi Overbridge Express Transit Corridor</strong>
-                  <span>Live Vehicle Sprint: ${data.sender_city} Hub ➔ ${data.receiver_city}</span>
+                  <strong>${currentLanguage === 'hi' ? 'एक्सप्रेस डिलीवरी कॉरिडोर' : 'Express Delivery Corridor'}</strong>
+                  <span>${currentLanguage === 'hi' ? 'लाइव रूट' : 'Live Route'}: ${data.sender_city} ➔ ${data.receiver_city}</span>
                 </div>
               </div>
               <div class="overbridge-telemetry">
@@ -743,7 +877,7 @@ function renderTrackingView(data) {
                   <span id="speedValueText">⚡ SPEED: 98 km/h (Express Burst)</span>
                 </span>
                 <button type="button" class="btn-replay-run" onclick="replayTruckAnimation()">
-                  🔄 Replay Sprint
+                  🔄 Replay
                 </button>
               </div>
             </div>
@@ -757,8 +891,8 @@ function renderTrackingView(data) {
                 <div class="bridge-arch"></div>
                 <div class="bridge-arch"></div>
                 <div class="milestone-post left-post">📍 ${data.sender_city}</div>
-                <div class="milestone-post brake-zone-post">⚠️ Deceleration Zone</div>
-                <div class="milestone-post right-post">🏁 ${data.receiver_city} Hub</div>
+                <div class="milestone-post brake-zone-post">⚠️ ${currentLanguage === 'hi' ? 'गति नियंत्रण' : 'Deceleration Zone'}</div>
+                <div class="milestone-post right-post">🏁 ${data.receiver_city}</div>
               </div>
 
               <div class="bridge-roadway">
@@ -875,14 +1009,18 @@ function renderTrackingView(data) {
             ${flowchartHtml}
           </div>
 
-          <!-- Timeline Audit History -->
+          <!-- Customer-Friendly Milestones Timeline -->
           <div class="card timeline-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding-bottom: 1rem;">
-              <h3 style="color: var(--text-main); font-size: 1.15rem;">Shipment Milestones & Transit Log</h3>
-              <span class="badge badge-info" id="tracking-scans-count">${data.events.length} Scans Recorded</span>
+            <div class="timeline-card-header">
+              <h3 style="color: var(--text-main); font-size: 1.15rem;">
+                ${currentLanguage === 'hi' ? '📦 पार्सल डिलीवरी स्थिति' : '📦 Shipment Milestones'}
+              </h3>
+              <span class="stage-badge ${currentLevel === 5 ? 'badge-done' : 'badge-active'}">
+                ${currentLevel === 5 ? (currentLanguage === 'hi' ? '🎉 डिलीवर सम्पन्न' : '🎉 Delivered') : (currentLanguage === 'hi' ? '● लाइव स्थिति' : '● Live Tracking')}
+              </span>
             </div>
             <div class="timeline-list" id="tracking-timeline-list">
-              ${eventsHtml}
+              ${milestonesHtml}
             </div>
           </div>
         </div>
@@ -935,86 +1073,39 @@ function handleLiveTrackingUpdate(update) {
   // 1. Play audio chime
   playAudioNotification();
 
-  // 2. Show floating toast
+  // 2. Show floating toast without internal hub name
+  const toastMsg = currentLanguage === 'hi'
+    ? `पार्सल स्थिति अपडेट: <strong>${update.current_status}</strong>.`
+    : `Consignment status updated to <strong>${update.current_status}</strong>.`;
+
   showRealtimeToast(
-    '⚡ Live Consignment Update',
-    `Status updated to <strong>${update.current_status}</strong> at <strong>${update.current_hub}</strong>.`
+    (currentLanguage === 'hi' ? '⚡ लाइव पार्सल अपडेट' : '⚡ Live Parcel Update'),
+    toastMsg
   );
 
-  // 3. Update status badge & header
-  const badge = document.getElementById('tracking-main-status-badge');
-  if (badge) {
-    badge.innerText = update.current_status;
-    badge.className = `badge ${update.current_status === 'Delivered' ? 'badge-success' : 'badge-accent'}`;
-  }
-
-  const screenStatus = document.getElementById('tracking-screen-status');
-  if (screenStatus) {
-    screenStatus.innerText = `● ${update.current_status.toUpperCase()}`;
-  }
-
-  // 4. Update flowchart stepper stages
-  const statusHierarchy = {
-    'Booking Confirmed': 1,
-    'Picked Up': 2,
-    'Dispatched': 3,
-    'In Transit': 3,
-    'Out for Delivery': 4,
-    'Delivered': 5
-  };
-  const newLevel = statusHierarchy[update.current_status] || 1;
-  const progressPercent = ((newLevel - 1) / 4) * 100;
-
-  const beamFill = document.querySelector('.flowchart-beam-fill');
-  if (beamFill) {
-    beamFill.style.width = `${Math.max(5, progressPercent)}%`;
-  }
-
-  const nodes = document.querySelectorAll('.flowchart-container .flow-node');
-  nodes.forEach((node, idx) => {
-    const stepNum = idx + 1;
-    node.classList.remove('completed', 'active');
-    const circle = node.querySelector('.flow-circle');
-    if (stepNum < newLevel) {
-      node.classList.add('completed');
-      if (circle) circle.innerText = '✓';
-    } else if (stepNum === newLevel) {
-      node.classList.add('active');
-    }
-  });
-
-  // 5. Prepend new timeline event item
-  const timelineList = document.getElementById('tracking-timeline-list');
-  if (timelineList) {
-    timelineList.querySelectorAll('.timeline-item').forEach(item => item.classList.remove('latest'));
-
-    const dateFormatted = new Date(update.timestamp || Date.now()).toLocaleString('en-IN', {
-      day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+  // 3. Update cached consignment data and re-render the customer-friendly view
+  if (lastTrackedConsignment && (!update.tracking_id || lastTrackedConsignment.tracking_id.toUpperCase() === (update.tracking_id || '').toUpperCase())) {
+    lastTrackedConsignment.current_status = update.current_status;
+    if (!lastTrackedConsignment.events) lastTrackedConsignment.events = [];
+    lastTrackedConsignment.events.push({
+      status: update.current_status,
+      timestamp: update.timestamp || new Date().toISOString()
     });
-
-    const newItem = document.createElement('div');
-    newItem.className = 'timeline-item timeline-item-new latest';
-    newItem.innerHTML = `
-      <div class="timeline-dot"></div>
-      <div class="timeline-content">
-        <div class="timeline-header">
-          <span class="timeline-status">${update.current_status}</span>
-          <span class="timeline-time">🕒 ${dateFormatted}</span>
-        </div>
-        <div class="timeline-hub">📍 ${update.current_hub}</div>
-        <p class="timeline-remarks">${update.remarks || ''}</p>
-      </div>
-    `;
-    timelineList.insertBefore(newItem, timelineList.firstChild);
-
-    const scansCount = document.getElementById('tracking-scans-count');
-    if (scansCount) {
-      const currentCount = timelineList.children.length;
-      scansCount.innerText = `${currentCount} Scans Recorded`;
+    renderTrackingView(lastTrackedConsignment);
+  } else {
+    // Fallback: update status badge if element exists
+    const badge = document.getElementById('tracking-main-status-badge');
+    if (badge) {
+      badge.innerText = update.current_status;
+      badge.className = `badge ${update.current_status === 'Delivered' ? 'badge-success' : 'badge-accent'}`;
+    }
+    const screenStatus = document.getElementById('tracking-screen-status');
+    if (screenStatus) {
+      screenStatus.innerText = `● ${update.current_status.toUpperCase()}`;
     }
   }
 
-  // 6. Trigger truck animation replay
+  // 4. Trigger truck animation replay
   replayTruckAnimation();
 }
 
